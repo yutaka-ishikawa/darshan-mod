@@ -1,0 +1,18 @@
+#!/bin/bash
+#
+DIST_TAR=darshan-aics-bin.tar.gz
+DIST_TMPDIR=dist-darshan
+DIST_DIR=darshan
+DIST_WORKDIR=$DIST_TMPDIR/$DIST_DIR
+mkdir -p $DIST_WORKDIR/k-lib
+mkdir -p $DIST_WORKDIR/bin
+mkdir -p $DIST_WORKDIR/example
+cp -p README-aics.txt $DIST_WORKDIR/
+cp -p darshan-2.3.0/darshan-runtime/lib/libdarshan.so $DIST_WORKDIR/k-lib/
+cp -p darshan-2.3.0/darshan-util/darshan-parser $DIST_WORKDIR/bin/
+cp -p example/Makefile.example $DIST_WORKDIR/example/Makefile
+cp -p darshan-2.3.0/darshan-runtime/lib/libdarshan.so $DIST_WORKDIR/example/
+cp -p example/run-k.sh $DIST_WORKDIR/example/
+cp -p example/simple.c $DIST_WORKDIR/example/
+(cd $DIST_TMPDIR; tar czf $DIST_TAR $DIST_DIR; mv $DIST_TAR ../)
+/bin/rm -rf $DIST_TMPDIR

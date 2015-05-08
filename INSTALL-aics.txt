@@ -1,0 +1,56 @@
+Extended Darshan (Based on 2.3.0 release)
+					      April 21, 2015
+					      System Software Development Team
+					       			    RIKEN AICS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+In case of Linux-Xeon
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+$ cd $(TOP)/darshan-2.3.0/darshan-runtime
+$ ./configure --with-mem-align=8 \
+  --with-log-path=./darshan --with-jobid-env=PBS_JOBID \
+  CC=mpicc CFLAGS="-O2 -g -DHISTORY"
+$ make
+You will get the libdarshan.so under the lib directory.
+
+$ cd $(TOP)/darshan-2.3.0/darshan-util
+$ ./configure CC=cc CFLAGS=-DHISTORY
+$ make
+$ sudo make install
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+In case of K
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+$ cd $(TOP)/darshan-2.3.0/darshan-runtime
+$ ./configure --host=x86_64-unknown-linux-gnu \
+  --target=sparc64v-sparc-linux-gnu --with-mem-align=8 \
+  --with-log-path=../darshan --with-jobid-env=NONE \
+  CC="mpifccpx -Xg" CFLAGS="-O2 -g -DHISTORY -DK_SUPERCOMPUTER"
+$ make
+
+You will get the libdarshan.so under the lib directory.  To view log
+files, it is better to install the darshan utilities on your local
+machine.
+
+Here, you may compile the darshan-parser tool in the K login node, but
+it does not fully work.  The login node does not have libz and
+libbz2 libraries.
+
+$ cd $(TOP)/darshan-2.3.0/darshan-util
+$ ./configure CC=cc CFLAGS=-DHISTORY
+$ make
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+About Extension
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The following two ifdef constants are introduced for AICS extensions.
+-DHISTORY
+ To enable recording file I/O operation history
+
+-DK_SUPERCOMPUTER
+ A feature, not working in K computer, is commented out at this
+ moment.  We have not yet investigated the reason, but it seems that
+ setmntent and getmntent funtions might cause illegal memory changes.
+
+-------------------------------------------------------------------------------
+			Written by Yutaka Ishikawa, yutaka.ishikawa@riken.jp
+

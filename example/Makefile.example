@@ -1,0 +1,14 @@
+MPICC   =       mpifccpx
+CFLAGS  = -DFJ_MPI -O3 -Xg
+
+simple: simple.c
+	$(MPICC) $(CFLAGS) -o simple simple.c
+
+#
+# For x86 Linux
+#MPICC = mpicc
+#CFLAGS  = -O3 -Wall
+#	mkdir -p ./darshan/`date +%Y/%m/%d | sed -e "s/\/0/\//g"`
+#	export LD_PRELOAD=./libdarshan.so; export DARSHAN_HISTORY_RW="w"; mpirun -np 2 ./simple wdata
+#
+

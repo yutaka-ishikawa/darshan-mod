@@ -1,0 +1,83 @@
+ーーーーーーーーーーーーーーーーーーーーーーーーーーー
+struct darshan_file * CP_MAX_FILES
+struct darshan_hfiles
+struct histdata
+ーーーーーーーーーーーーーーーーーーーーーーーーーーー
+darshan-mpi-io.c
+darshan_shutdown()
+     pointersは、
+	    void* pointers[CP_MAX_MEM_SEGMENTS];
+	    	  CP_MAX_MEM_SEGMENTSは、darshan-mpi-io.cで定義
+　　１）cp_log_construct_indices(final_job, rank, &index_count, lengths, 
+            pointers, final_job->trailing_data);
+　　　　ここで、書き込むpointersを生成
+	void cp_log_construct_indices(struct darshan_job_runtime* final_job, 
+	    int rank, int* inout_count, int* lengths, void** pointers, char*
+	        trailing_data)
+	(1) rank 0は、
+	      final_job->log_file(darshan_job構造体)およびexe command
+	      lineを吐き出す
+        (2) 全rankが、final_job->log_file->file_array(darshan_file)
+	     を吐き出す
+　　２）local_ret = cp_log_compress(final_job, rank, &index_count, 
+       		   lengths, pointers);
+　　　　cp_log_construct_indices(struct darshan_job_runtime* final_job, 
+	 int rank, int* inout_count, int* lengths, void** pointers, char*
+	  trailing_data)
+		ここでgzipデータ領域を集めてきて、
+		pointersに格納。inout_countにpointersの長さ、
+		lengthsはpointersの書くエントリの大きさ
+　　３）cp_log_compressでgzipデータ作っている
+　　４）cp_log_writeで実際の書き込み
+ーーーーーーーーーーーーーーーーーーーーーーーーーーー
+
+aio周りどうするか
+HISTORYの定義は、今は、ちょくにMakefile修正している
+　CFLAGSとCFLAGS_SHARED
+	darshan-runtime/lib/Makefile
+	darshan-util/Makefile
+ーーーーーーーーーーーーーーーーーーーーーーーーーーー
+usec, msec, sec
+
+32bit 2^32/(1000*1000*60) = 71 hour
+16bit 2^16/(1000*1000) = 
+
+4Byte x 1Mentry = 4MB
+
+darshan_file
+darshan_file_runtime
+
+darshan_file_by_name_setfdでdarshan_file_runtime構造体生成
+
+区間で採るというのもあり得る。
+
+ーーーーーーーーーーーーーーーーーーーーーーーーーーー
+darshan_fileがファイルフォーマット
+	darshan_-log-format.h
+サイズが固定。どうやってマッピングするか。。。。
+ーーーーーーーーーーーーーーーーーーーーーーーーーーー
+以下がTOPレベルの構造体(darshan.h)
+extern struct darshan_job_runtime* darshan_global_job;
+
+darshan_job_runtime構造体の中で、
+    struct darshan_file_runtime file_runtime_array[CP_MAX_FILES];
+　　が、ジョブ実行中に扱えるファイル上限で、1024
+	#define CP_MAX_FILES 1024
+    struct darshan_file_runtime* name_table[CP_HASH_SIZE];
+　　が、オープンしているファイルを保存しておく領域。
+　　#define CP_HASH_BITS 8
+　　#define CP_HASH_SIZE (1 << CP_HASH_BITS)
+　　となっているので、同時に255個のファイル名を保持できる。
+　　これを超えた場合、
+　　darshan_condesense関数でcompactionされる。
+　　 * collapses all file statistics into a single unified set of counters; used
+　　 * when we have opened too many files to track independently
+
+
+上記初期化しているのは？
+
+
+POSIX file I/Oでは、
+darshan_file_by_name関数でdarshan_file_runtime構造体を選択。
+
+

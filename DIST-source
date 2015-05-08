@@ -1,0 +1,20 @@
+#!/bin/bash
+#
+DARSHAN=darshan-2.3.0
+DIST_TAR=darshan-aics-source.tar.gz
+DIST_TMPDIR=dist-darshan-aics
+DIST_DIR=darshan-aics
+#
+DIST_WORKDIR=$DIST_TMPDIR/$DIST_DIR
+mkdir -p $DIST_WORKDIR/
+cp -rp  $DARSHAN $DIST_WORKDIR/
+(cd $DIST_WORKDIR/darshan-2.3.0; rm -f MEMO*)
+(cd $DIST_WORKDIR/darshan-2.3.0/darshan-runtime; make clean)
+(cd $DIST_WORKDIR/darshan-2.3.0/darshan-util; make clean)
+cp -rp INSTALL-aics.txt $DIST_WORKDIR/
+#
+(cd $DIST_TMPDIR; tar czf $DIST_TAR $DIST_DIR)
+mv $DIST_TMPDIR/$DIST_TAR ./
+rm -rf $DIST_WORKDIR
+
+

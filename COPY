@@ -1,0 +1,1 @@
+tar czf darshan-copy.tar.gz DIST-binary DIST-source INSTALL-aics.txt README-aics.txt example darshan-2.3.0
