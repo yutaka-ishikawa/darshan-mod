@@ -122,7 +122,14 @@ void accum_file(struct darshan_job *, struct darshan_file *, hash_entry_t *, fil
 void calc_file(struct darshan_job *, hash_entry_t *, file_data_t *);
 void file_list(struct darshan_job *, hash_entry_t *, int);
 #ifdef HISTORY
-void print_history(int count, struct darshan_history_data *hdata, double);
+static void print_history(int count, struct darshan_history_data *hdata, double);
+#ifdef WORDS_BIGENDIAN
+#define dhist_swap32(fd) (fd)
+#define dhist_swap64(dd) (dd)
+#else
+extern float dhist_swap32(float fd);
+extern double dhist_swap64(double dd);
+#endif /* WORDS_BIGENDIAN */
 #endif /* HISTORY */
 
 int usage (char *exename)
@@ -317,12 +324,12 @@ int main(int argc, char **argv)
 	    for (i = 0; i < darshan_hist.nfiles; i++) {
 		struct darshan_history_util *dhup = &darshan_hist.hutil[i];
 		if (dhup->hutil_read > 0) {
-		    printf("# <%d> read %s\n", dhup->rank, dhup->hutil_name);
+		    printf("# <%d> read %s open %f close %f\n", dhup->rank, dhup->hutil_name, dhist_swap64(dhup->hutil_open), dhist_swap64(dhup->hutil_close));
 		    print_history(dhup->hutil_read, dhup->hutil_rdata,
 				  dhup->hutil_rstart);
 		}
 		if (dhup->hutil_write > 0) {
-		    printf("# <%d> write %s\n", dhup->rank, dhup->hutil_name);
+		    printf("# <%d> write %s open %f close %f\n", dhup->rank, dhup->hutil_name, dhist_swap64(dhup->hutil_open), dhist_swap64(dhup->hutil_close));
 		    print_history(dhup->hutil_write, dhup->hutil_wdata,
 				  dhup->hutil_wstart);
 		}
@@ -1162,60 +1169,27 @@ void calc_perf(struct darshan_job *djob,
 }
 
 #ifdef HISTORY
-#ifdef WORDS_BIGENDIAN
-#define swap32(fd) (fd)
-#define swap64(dd) (dd)
-#else
-/* little endian */
-static float swap32(float fd)
+uint32_t
+f2u(float f)
 {
     union uu {
 	float		fd;
 	uint32_t	ud;
     } uu;
-    uu.fd = fd;
-    uu.ud = ((uu.ud << 24) & 0xff000000) | ((uu.ud <<  8) & 0x00ff0000)
-	  | ((uu.ud >>  8) & 0x0000ff00) | ((uu.ud >> 24) & 0x000000ff);
-    return uu.fd;
-}
-static double swap64(double dd)
-{
-    union uu {
-	double		dd;
-	uint64_t	ud;
-    } uu;
-    uu.dd = dd;
-    uu.ud = ((uu.ud << 56) & 0xff00000000000000)
-	  | ((uu.ud << 40) & 0x00ff000000000000)
-	  | ((uu.ud << 24) & 0x0000ff0000000000)
-	  | ((uu.ud <<  8) & 0x000000ff00000000)
-          | ((uu.ud >>  8) & 0x00000000ff000000)
-	  | ((uu.ud >> 24) & 0x0000000000ff0000)
-	  | ((uu.ud >> 40) & 0x000000000000ff00)
-	  | ((uu.ud >> 56) & 0x00000000000000ff);
-    return uu.dd;
-}
-static unsigned long long d2ull(double dd)
-{
-    union uu {
-	double		dd;
-	uint64_t	ud;
-    } uu;
-    uu.dd = dd;
+    uu.fd = f;
     return uu.ud;
 }
-#endif /* WORDS_BIGENDIAN */
-void print_history(int count, struct darshan_history_data *hdata, double tsec)
+static void print_history(int count, struct darshan_history_data *hdata, double tsec)
 {
     int		i;
     double	time_sec = 0;
 
-    printf("# start = %f count=%d\n", swap64(tsec), count);
+    printf("# start = %f count=%d\n", dhist_swap64(tsec), count);
     printf("# time, elapsed, Kbyte\n");
     for (i = 0; i < count; i++) {
-	time_sec += swap32(hdata[i].diff_sec);
+	time_sec += dhist_swap32(hdata[i].diff_sec);
 	printf("%f, %f, %f\n", (float) time_sec,
-	       swap32(hdata[i].time_sec),  swap32(hdata[i].size));
+	       dhist_swap32(hdata[i].time_sec),  dhist_swap32(hdata[i].size));
     }
 }
 #endif /* HISTORY */

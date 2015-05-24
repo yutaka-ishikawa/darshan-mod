@@ -1788,6 +1788,15 @@ void histcopy(struct darshan_history_data **dhpp, int *nentp, int total_ent,
     *nentp = nent;
     *dhpp = dhp;
 }
+
+static double
+darshan_history_normalize_wtime(double offset, double start)
+{
+    double	dt;
+    dt = (start > offset) ? (start - offset) : start;
+    // printf("start(%f) offset(%f), return(%f)\n", start, offset, dt);
+    return swap64(dt);
+}
 #endif /* HISTORY */
 /* cp_log_construct_indices()
  *
@@ -1858,13 +1867,32 @@ static void cp_log_construct_indices(struct darshan_job_runtime* final_job,
 	    szw = final_job->file_runtime_array[i].hist_w.hist_total;
 	    szr = final_job->file_runtime_array[i].hist_r.hist_total;
 	    if (szw == 0 && szr == 0) continue;
-	    strcpy(dhfp[nfiles].hfile_name, final_job->file_array[i].name_suffix);
+	    /* file name */
+	    strcpy(dhfp[nfiles].hfile_name,
+		   final_job->file_array[i].name_suffix);
+	    /* open time stamp relative to MPI_Init */
+	    dhfp[nfiles].hfile_open
+		= swap64(CP_F_VALUE(&final_job->file_runtime_array[i],
+				    CP_F_OPEN_TIMESTAMP));
+	    /* close time stamp relative to MPI_Init */
+	    dhfp[nfiles].hfile_close
+		= swap64(CP_F_VALUE(&final_job->file_runtime_array[i],
+				    CP_F_CLOSE_TIMESTAMP));
+	    /* read start time stamp relative to MPI_Init */
 	    dhfp[nfiles].hfile_rstart
-		= swap64(final_job->file_runtime_array[i].hist_r.hist_start);
+		= darshan_history_normalize_wtime(final_job->wtime_offset,
+			final_job->file_runtime_array[i].hist_r.hist_start);
+	    /* write start time stamp relative to MPI_Init */
 	    dhfp[nfiles].hfile_wstart
-		= swap64(final_job->file_runtime_array[i].hist_w.hist_start);
+		= darshan_history_normalize_wtime(final_job->wtime_offset, 
+			final_job->file_runtime_array[i].hist_w.hist_start);
 	    dhfp[nfiles].hfile_read = htonl(szr);
 	    dhfp[nfiles].hfile_write = htonl(szw);
+#ifdef HISTORY_DEBUG
+	    printf(" i(%d) open(%f) close(%f)\n", i,
+		   swap64(dhfp[nfiles].hfile_open),
+		   swap64(dhfp[nfiles].hfile_close));
+#endif /* HISTORY_DEBUG */
 	    total_ent += szr + szw;
 	    nfiles++;
 	}

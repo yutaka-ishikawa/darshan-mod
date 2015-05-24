@@ -79,6 +79,8 @@ void darshan_log_print_version_warnings(struct darshan_job *job);
 struct darshan_history_util {
     uint32_t	rank;
     char	hutil_name[CP_NAME_SUFFIX_LEN+1];
+    double	hutil_open;
+    double	hutil_close;
     double	hutil_rstart;
     double	hutil_wstart;
     uint32_t	hutil_read; /* each has two entries, i.e., read and write */

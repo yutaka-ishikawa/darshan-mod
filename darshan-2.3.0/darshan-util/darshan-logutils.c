@@ -254,6 +254,52 @@ static int darshan_log_read(darshan_fd fd, void* buf, int len);
 static int darshan_log_write(darshan_fd fd, void* buf, int len);
 static const char* darshan_log_error(darshan_fd fd, int* errnum);
 
+#ifdef HISTORY
+#ifdef WORDS_BIGENDIAN
+#define dhist_swap32(fd) (fd)
+#define dhist_swap64(dd) (dd)
+#else
+/* little endian */
+float dhist_swap32(float fd)
+{
+    union uu {
+	float		fd;
+	uint32_t	ud;
+    } uu;
+    uu.fd = fd;
+    uu.ud = ((uu.ud << 24) & 0xff000000) | ((uu.ud <<  8) & 0x00ff0000)
+	  | ((uu.ud >>  8) & 0x0000ff00) | ((uu.ud >> 24) & 0x000000ff);
+    return uu.fd;
+}
+double dhist_swap64(double dd)
+{
+    union uu {
+	double		dd;
+	uint64_t	ud;
+    } uu;
+    uu.dd = dd;
+    uu.ud = ((uu.ud << 56) & 0xff00000000000000)
+	  | ((uu.ud << 40) & 0x00ff000000000000)
+	  | ((uu.ud << 24) & 0x0000ff0000000000)
+	  | ((uu.ud <<  8) & 0x000000ff00000000)
+          | ((uu.ud >>  8) & 0x00000000ff000000)
+	  | ((uu.ud >> 24) & 0x0000000000ff0000)
+	  | ((uu.ud >> 40) & 0x000000000000ff00)
+	  | ((uu.ud >> 56) & 0x00000000000000ff);
+    return uu.dd;
+}
+unsigned long long d2ull(double dd)
+{
+    union uu {
+	double		dd;
+	uint64_t	ud;
+    } uu;
+    uu.dd = dd;
+    return uu.ud;
+}
+#endif /* WORDS_BIGENDIAN */
+#endif /* HISTORY */
+
 /* a rather crude API for accessing raw binary darshan files */
 darshan_fd darshan_log_open(const char *name, const char* mode)
 {
@@ -381,7 +427,7 @@ int darshan_log_getjob(darshan_fd file, struct darshan_job *job)
     }
 
 #ifdef HISTORY
-    if(strcmp(file->version, "2.05h") == 0)
+    if(strcmp(file->version, CP_VERSION) == 0)
     {
         getjob_internal = getjob_internal_204;
         getfile_internal = getfile_internal_204h;
@@ -778,7 +824,7 @@ void darshan_log_close(darshan_fd file)
 void darshan_log_print_version_warnings(struct darshan_job *job)
 {
 #ifdef HISTORY
-    if(strcmp(job->version_string, "2.05h") == 0) {
+    if(strcmp(job->version_string, CP_VERSION) == 0) {
 	return;
     }
 #endif /* HISTORY */
@@ -1409,16 +1455,21 @@ static int getfile_internal_204h(darshan_fd fd, struct darshan_job *job,
     for (i = 0; i < darshan_hheader.nfiles; i++) {
 	darshan_hutil[i].rank = darshan_hheader.rank;
 	strcpy(darshan_hutil[i].hutil_name, darshan_hfile[i].hfile_name);
+	darshan_hutil[i].hutil_open = darshan_hfile[i].hfile_open;
+	darshan_hutil[i].hutil_close = darshan_hfile[i].hfile_close;
 	darshan_hutil[i].hutil_rstart = darshan_hfile[i].hfile_rstart;
 	darshan_hutil[i].hutil_wstart = darshan_hfile[i].hfile_wstart;
 	szr = ntohl(darshan_hfile[i].hfile_read);
 	szw = ntohl(darshan_hfile[i].hfile_write);
-#ifdef HISTORY_DEBUG
-	printf("file: %s szr = %d, szw = %d\n", darshan_hfile[i].hfile_name, szr, szw);
-#endif /* HISTORY_DEBUG */
 	darshan_hutil[i].hutil_read = szr;
 	darshan_hutil[i].hutil_write = szw;
 	nhistdata += szr + szw;
+#ifdef HISTORY_DEBUG
+	printf("file (%i): %s szr = %d, szw = %d open(%f) close(%f)\n",
+	       i, darshan_hfile[i].hfile_name, szr, szw,
+	       dhist_swap64(darshan_hutil[i].hutil_open),
+	       dhist_swap64(darshan_hutil[i].hutil_close));
+#endif /* HISTORY_DEBUG */
     }
     /* darshan_history_data */
     histsz = sizeof(struct darshan_history_data)*nhistdata;
