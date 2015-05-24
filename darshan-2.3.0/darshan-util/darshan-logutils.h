@@ -83,6 +83,7 @@ struct darshan_history_util {
     double	hutil_close;
     double	hutil_rstart;
     double	hutil_wstart;
+    uint32_t	hutil_nopen;
     uint32_t	hutil_read; /* each has two entries, i.e., read and write */
     uint32_t	hutil_write;	 
     struct darshan_history_data	*hutil_rdata;

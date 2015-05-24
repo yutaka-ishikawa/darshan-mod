@@ -1888,6 +1888,10 @@ static void cp_log_construct_indices(struct darshan_job_runtime* final_job,
 			final_job->file_runtime_array[i].hist_w.hist_start);
 	    dhfp[nfiles].hfile_read = htonl(szr);
 	    dhfp[nfiles].hfile_write = htonl(szw);
+	    /* number of times open */
+	    dhfp[nfiles].hfile_nopen
+		= htonl(CP_VALUE(&final_job->file_runtime_array[i],
+				 CP_POSIX_OPENS));
 #ifdef HISTORY_DEBUG
 	    printf(" i(%d) open(%f) close(%f)\n", i,
 		   swap64(dhfp[nfiles].hfile_open),

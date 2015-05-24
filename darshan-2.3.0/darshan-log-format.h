@@ -254,11 +254,12 @@ struct darshan_history_header {
 #define SIZE_HISTORY_HEADER	sizeof(struct darshan_history_header)
 struct darshan_history_file {
     char	hfile_name[CP_NAME_SUFFIX_LEN+1];
-    double	hfile_open;
-    double	hfile_close;
+    double	hfile_open;  /* first open time */
+    double	hfile_close; /* last open time */
     double	hfile_rstart;
     double	hfile_wstart;
-    uint32_t	hfile_read; /* each has two entries, i.e., read and write */
+    uint32_t	hfile_nopen; /* number of times */
+    uint32_t	hfile_read;  /* each has two entries, i.e., read and write */
     uint32_t	hfile_write;	 
 };
 #define SIZE_HISTORY_FILE	sizeof(struct darshan_history_file)

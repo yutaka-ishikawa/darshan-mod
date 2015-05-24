@@ -324,12 +324,12 @@ int main(int argc, char **argv)
 	    for (i = 0; i < darshan_hist.nfiles; i++) {
 		struct darshan_history_util *dhup = &darshan_hist.hutil[i];
 		if (dhup->hutil_read > 0) {
-		    printf("# <%d> read %s open %f close %f\n", dhup->rank, dhup->hutil_name, dhist_swap64(dhup->hutil_open), dhist_swap64(dhup->hutil_close));
+		    printf("# <%d> read %s ntimes %d open %f close %f\n", dhup->rank, dhup->hutil_name, dhup->hutil_nopen, dhist_swap64(dhup->hutil_open), dhist_swap64(dhup->hutil_close));
 		    print_history(dhup->hutil_read, dhup->hutil_rdata,
 				  dhup->hutil_rstart);
 		}
 		if (dhup->hutil_write > 0) {
-		    printf("# <%d> write %s open %f close %f\n", dhup->rank, dhup->hutil_name, dhist_swap64(dhup->hutil_open), dhist_swap64(dhup->hutil_close));
+		    printf("# <%d> write %s ntimes %d open %f close %f\n", dhup->rank, dhup->hutil_name, dhup->hutil_nopen, dhist_swap64(dhup->hutil_open), dhist_swap64(dhup->hutil_close));
 		    print_history(dhup->hutil_write, dhup->hutil_wdata,
 				  dhup->hutil_wstart);
 		}

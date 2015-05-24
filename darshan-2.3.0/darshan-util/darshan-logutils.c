@@ -1455,10 +1455,13 @@ static int getfile_internal_204h(darshan_fd fd, struct darshan_job *job,
     for (i = 0; i < darshan_hheader.nfiles; i++) {
 	darshan_hutil[i].rank = darshan_hheader.rank;
 	strcpy(darshan_hutil[i].hutil_name, darshan_hfile[i].hfile_name);
+	/* no conversion here for timestamp */
 	darshan_hutil[i].hutil_open = darshan_hfile[i].hfile_open;
 	darshan_hutil[i].hutil_close = darshan_hfile[i].hfile_close;
 	darshan_hutil[i].hutil_rstart = darshan_hfile[i].hfile_rstart;
 	darshan_hutil[i].hutil_wstart = darshan_hfile[i].hfile_wstart;
+	/* */
+	darshan_hutil[i].hutil_nopen = ntohl(darshan_hfile[i].hfile_nopen);
 	szr = ntohl(darshan_hfile[i].hfile_read);
 	szw = ntohl(darshan_hfile[i].hfile_write);
 	darshan_hutil[i].hutil_read = szr;
