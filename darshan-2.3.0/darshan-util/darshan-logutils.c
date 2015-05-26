@@ -1396,7 +1396,7 @@ static int getfile_internal_204h(darshan_fd fd, struct darshan_job *job,
     int		histsz;
 
     iret = getfile_internal_204(fd, job, file);
-    if (ret < 0) return ret;
+    if (iret < 0) return iret;
 
     /* clear history data */
     darshan_hist.nfiles = 0;
