@@ -567,6 +567,9 @@ int DARSHAN_DECL(open)(const char *path, int flags, ...)
     double tm1, tm2;
 
     MAP_OR_FAIL(open);
+#ifdef DARSHAN_SINGLE
+    darshan_single_init();
+#endif /* DARSHAN_SINGLE */
 
     if (flags & O_CREAT) 
     {
@@ -1406,10 +1409,7 @@ void darshan_initialize(int argc, char** argv,  int nprocs, int rank)
     /* collect information about command line and 
      * mounted file systems 
      */
-#ifndef K_SUPERCOMPUTER
-    darshan_global_job->trailing_data = 
-        darshan_get_exe_and_mounts(darshan_global_job);
-#else
+#if defined(K_SUPERCOMPUTER) || defined(DARSHAN_SINGLE)
     {
 	char *p = malloc(CP_EXE_LEN+1);
 	if (p == NULL) {
@@ -1418,8 +1418,11 @@ void darshan_initialize(int argc, char** argv,  int nprocs, int rank)
 	    strcpy(p, darshan_global_job->exe);
             darshan_global_job->trailing_data = p;
 	}
-}
-#endif /* K_SUPERCOMPUTER */
+     }
+#else
+    darshan_global_job->trailing_data = 
+        darshan_get_exe_and_mounts(darshan_global_job);
+#endif /* K_SUPERCOMPUTER || DARSHAN_SINGLE */
 
     return;
 }
