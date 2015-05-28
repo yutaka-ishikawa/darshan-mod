@@ -8,7 +8,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/vfs.h>
 #include <time.h>
@@ -17,6 +16,7 @@
 #include "darshan.h"
 #define __USE_GNU
 #include <dlfcn.h>
+#include <linux/limits.h>
 
 #define CP_MAX_MEM_SEGMENTS 8 /* comes from darshan-mpi-io.c */
 
@@ -67,10 +67,10 @@ darshan_single_init()
     atexit(darhsan_single_exit);
     __real_PMPI_Wtime = darshan_single_wtime;
 
-    real_open = dlsym(RTLD_NEXT, "open");
-    real_close = dlsym(RTLD_NEXT, "close");
-    real_write = dlsym(RTLD_NEXT, "write");
-    real_read = dlsym(RTLD_NEXT, "read");
+    real_open = (int (*)(const char*, int, mode_t)) dlsym(RTLD_NEXT, "open");
+    real_close = (int (*)(int)) dlsym(RTLD_NEXT, "close");
+    real_write = (ssize_t (*)(int, const void*, size_t)) dlsym(RTLD_NEXT, "write");
+    real_read = (ssize_t (*)(int, const void*, size_t)) dlsym(RTLD_NEXT, "read");
 
     pid = getpid();
     snprintf(bufpath, 1024, "/proc/%d/cmdline", pid);

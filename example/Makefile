@@ -33,6 +33,11 @@ myrun2:
 
 myrunc:
 	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="w"; ./ccode a1 a2 a3 a4
+top:
+	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; top
+libcopy:
+	cp -p ../darshan-2.3.0/darshan-runtime/lib/libdarshan.so .
+	cp -p ../darshan-2.3.0/darshan-runtime/lib/libdarshan-single.so .
 
 #	export LD_PRELOAD=./libdarshan.so; export DARSHAN_HISTORY_RW="w"; mpirun -np 2 ./simple2 wdata
 #
