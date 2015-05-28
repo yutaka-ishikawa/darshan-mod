@@ -1,6 +1,7 @@
 #MPICC   =       mpifccpx
 #CFLAGS  = -DFJ_MPI -O3 -Xg
 MPICC = mpicc
+CC = cc
 CFLAGS  = -O3 -Wall
 
 all: simple simple2 simple3
@@ -10,6 +11,8 @@ simple2: simple2.c
 	$(MPICC) $(CFLAGS) -o simple2 simple2.c
 simple3: simple3.c
 	$(MPICC) $(CFLAGS) -o simple3 simple3.c
+ccode: ccode.c
+	$(CC) $(CFLAGS) -o ccode ccode.c
 clean:
 	rm -f wdata* *.o simple simple2 simple3
 sub:
@@ -27,6 +30,9 @@ myrun2:
 	mkdir -p ./darshan/`date +%Y/%m/%d | sed -e "s/\/0/\//g"`
 	export LD_PRELOAD=./libdarshan.so; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=10485760; mpirun -np 2 ./simple2 wdata
 	export LD_PRELOAD=./libdarshan.so; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=10485760; mpirun -np 2 ./simple3 wdata
+
+myrunc:
+	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="w"; ./ccode a1 a2 a3 a4
 
 #	export LD_PRELOAD=./libdarshan.so; export DARSHAN_HISTORY_RW="w"; mpirun -np 2 ./simple2 wdata
 #
