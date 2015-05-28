@@ -323,13 +323,32 @@ int main(int argc, char **argv)
 #endif /* HISTORY_DEBUG */
 	    for (i = 0; i < darshan_hist.nfiles; i++) {
 		struct darshan_history_util *dhup = &darshan_hist.hutil[i];
+		printf("# <%d> ", dhup->rank);
 		if (dhup->hutil_read > 0) {
-		    printf("# <%d> read %s ntimes %d open %f close %f\n", dhup->rank, dhup->hutil_name, dhup->hutil_nopen, dhist_swap64(dhup->hutil_open), dhist_swap64(dhup->hutil_close));
+		    if (dhup->hutil_nopen) {
+			printf("read %s ntimes %d open ",
+			       dhup->hutil_name, dhup->hutil_nopen);
+		    } else {
+			printf("read %s ntimes %d fopen ",
+			       dhup->hutil_name, dhup->hutil_nfopen);
+		    }
+		    printf("%f close %f\n", 
+			   dhist_swap64(dhup->hutil_open),
+			   dhist_swap64(dhup->hutil_close));
 		    print_history(dhup->hutil_read, dhup->hutil_rdata,
 				  dhup->hutil_rstart);
 		}
 		if (dhup->hutil_write > 0) {
-		    printf("# <%d> write %s ntimes %d open %f close %f\n", dhup->rank, dhup->hutil_name, dhup->hutil_nopen, dhist_swap64(dhup->hutil_open), dhist_swap64(dhup->hutil_close));
+		    if (dhup->hutil_nopen) {
+			printf("write %s ntimes %d open ",
+			       dhup->hutil_name, dhup->hutil_nopen);
+		    } else {
+			printf("write %s ntimes %d fopen ",
+			       dhup->hutil_name, dhup->hutil_nfopen);
+		    }
+		    printf("%f close %f\n", 
+			   dhist_swap64(dhup->hutil_open),
+			   dhist_swap64(dhup->hutil_close));
 		    print_history(dhup->hutil_write, dhup->hutil_wdata,
 				  dhup->hutil_wstart);
 		}

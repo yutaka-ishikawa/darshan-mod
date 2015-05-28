@@ -19,7 +19,7 @@
 #endif
 
 #ifdef HISTORY
-#define CP_VERSION "2.05hv2"
+#define CP_VERSION "2.05hv3"
 #else
 /* update this on file format changes */
 #define CP_VERSION "2.05"
@@ -258,9 +258,11 @@ struct darshan_history_file {
     double	hfile_close; /* last open time */
     double	hfile_rstart;
     double	hfile_wstart;
-    uint32_t	hfile_nopen; /* number of times */
+    uint32_t	hfile_nopen; /* number of times in open */
+    uint32_t	hfile_nfopen; /* number of times in fopen */
     uint32_t	hfile_read;  /* each has two entries, i.e., read and write */
-    uint32_t	hfile_write;	 
+    uint32_t	hfile_write;
+    uint32_t	hfile_fill;  /* 8 byte alignment */
 };
 #define SIZE_HISTORY_FILE	sizeof(struct darshan_history_file)
 struct darshan_history_data {
