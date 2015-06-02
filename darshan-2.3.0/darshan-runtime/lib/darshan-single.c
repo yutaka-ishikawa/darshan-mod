@@ -24,6 +24,7 @@ extern void darshan_history_construct_indices(struct darshan_job_runtime* final_
 
 struct darshan_history_header	*darshan_hheader;
 double		(*__real_PMPI_Wtime)(void);
+static int	single_init_f = 0;
 static char	cmdline[CP_EXE_LEN + 1];
 static char	**argv;
 static char	*cmdname;
@@ -61,6 +62,10 @@ darshan_single_init()
     int		argc = 0;
     char	bufpath[1024];
 
+    if (single_init_f == 1) {
+	return;
+    }
+    single_init_f = 1;
 #ifdef HISTORY_DEBUG
     printf("darshan_single_init: invoked\n");
 #endif /* HISTORY_DEBUG */

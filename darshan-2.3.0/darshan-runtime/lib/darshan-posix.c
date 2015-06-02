@@ -606,6 +606,9 @@ FILE* DARSHAN_DECL(fopen64)(const char *path, const char *mode)
     double tm1, tm2;
 
     MAP_OR_FAIL(fopen64);
+#ifdef DARSHAN_SINGLE
+    darshan_single_init();
+#endif /* DARSHAN_SINGLE */
 
     tm1 = darshan_wtime();
     ret = __real_fopen64(path, mode);
@@ -629,6 +632,9 @@ FILE* DARSHAN_DECL(fopen)(const char *path, const char *mode)
     double tm1, tm2;
 
     MAP_OR_FAIL(fopen);
+#ifdef DARSHAN_SINGLE
+    darshan_single_init();
+#endif /* DARSHAN_SINGLE */
 
     tm1 = darshan_wtime();
     ret = __real_fopen(path, mode);
