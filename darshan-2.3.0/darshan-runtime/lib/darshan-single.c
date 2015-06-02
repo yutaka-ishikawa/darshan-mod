@@ -17,6 +17,7 @@
 #define __USE_GNU
 #include <dlfcn.h>
 #include <linux/limits.h>
+#include <errno.h>
 
 #define CP_MAX_MEM_SEGMENTS 8 /* comes from darshan-mpi-io.c */
 
@@ -134,6 +135,13 @@ darhsan_single_exit()
     int				fd, ret;
     int				lengths[CP_MAX_MEM_SEGMENTS];
     void			*pointers[CP_MAX_MEM_SEGMENTS];
+    char            hostname[1024];
+
+    /* get host name for log file */
+    if (gethostname(hostname, sizeof(hostname)) < 0) {
+        fprintf(stderr, "error: obtaining hostname\n");
+        return;
+    }
 
     CP_LOCK();
     if(!darshan_global_job)
@@ -200,7 +208,10 @@ darhsan_single_exit()
     /*
      * darshanlog-username-pid
      */
-    snprintf(logfile_name, PATH_MAX, "darshanlog-%s-%s-%u.gz", cuser, cmdname, pid);
+    snprintf(logfile_name, PATH_MAX, "%s%sdarshanlog-%s-%ld-%s-%u.gz", 
+        getenv("DARSHAN_SINGLE_LOG_DIR") ? getenv("DARSHAN_SINGLE_LOG_DIR") : "",
+        getenv("DARSHAN_SINGLE_LOG_DIR") ? "/" : "",
+        hostname, final_job->log_job.start_time, cmdname, pid);
     final_job->log_job.end_time = time(NULL);
 
     /* collect data to write from local process */
@@ -237,6 +248,13 @@ darhsan_single_exit()
 #ifdef HISTORY_DEBUG
     printf("lengths=%d pointers[0] = %p\n", lengths[0], pointers[0]);
 #endif /* HISTORY_DEBUG */
+    if (getenv("DARSHAN_SINGLE_LOG_DIR")) {
+        if (mkdir(getenv("DARSHAN_SINGLE_LOG_DIR"), 0777) < 0 && errno != EEXIST) {
+            fprintf(stderr, "darshan: cannot create directory %s\n", 
+                    getenv("DARSHAN_SINGLE_LOG_DIR"));
+            goto err_ret;
+        }
+    }
     fd = real_open(logfile_name, O_CREAT|O_WRONLY, 0644);
     if (fd < 0) {
 	fprintf(stderr, "darshan: cannot create %s\n", logfile_name);
