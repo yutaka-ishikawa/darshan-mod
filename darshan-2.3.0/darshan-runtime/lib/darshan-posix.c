@@ -560,6 +560,9 @@ int DARSHAN_DECL(open64)(const char* path, int flags, ...)
     return(ret);
 }
 
+#ifdef DARSHAN_SINGLE
+extern void	darshan_single_init(void);
+#endif /* DARSHAN_SINGLE */
 int DARSHAN_DECL(open)(const char *path, int flags, ...)
 {
     int mode = 0;
