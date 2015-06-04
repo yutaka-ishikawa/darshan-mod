@@ -42,7 +42,7 @@ my $width = 640;
 my $hight = 480;
 my $plot_start = "*";
 my $plot_end = "*";
-my $plot_data = "\"file-access-rank_read.dat\" using 1:2 with lines lw 1 lt 1 title \"read\", \"file-access-rank_write.dat\" using 1:2 with lines lw 1 lt 2  title \"write\", \"file-access-rank_open.dat\" using 1:2 with points pt 2 lt 3  title \"open\", \"file-access-rank_close.dat\" using 1:2 with points pt 1 lt 3  title \"close\"";
+my $plot_data = "\"file-access-rank_read.dat\" using 1:2 with lines lw 1 lt 1 title \"read\", \"file-access-rank_write.dat\" using 1:2 with lines lw 1 lt 2  title \"write\", \"file-access-rank_open.dat\" using 1:2 with points pt 1  title \"open\", \"file-access-rank_close.dat\" using 1:2 with points pt 2  title \"close\"";
 my $plot_caption = "Timespan for read/write access on files";
 my $plot_ytics = "";
 
@@ -71,6 +71,10 @@ my $current_rank = 0;
 my $current_vec = "";
 my $current_file = "";
 my $io_sum = 0;
+my $open_time = 0;
+my $close_time = 0;
+my $notfirst = 0;
+my $is_stream = 0;
 
 while ($line = <TRACE>) {
     chomp($line);
@@ -79,24 +83,34 @@ while ($line = <TRACE>) {
         # ignore blank lines
     }
     elsif ($line =~ /^#/) {
-	if ($line =~ /^# nprocs: /) {
+	if ($line =~ /^# start_time: ([\d\.]+)/) {
+	    $jobstart_time = $1;
+	} elsif ($line =~ /^# nprocs: /) {
 	    $nprocs = (split(':', $line, 2))[1];
 	    if($plot_to == 0) {
 		$plot_to = int($nprocs)-0.5;
 	    }
-	}
-	if ($line =~ /^# start = ([\d\.]+)/) {
+	} elsif ($line =~ /^# start = ([\d\.]+)/) {
 #YI	    $diff_since_first_io = $1 - $minimum_start_time;
 	    $diff_since_first_io = $1;
-	}
-	if ($line =~ /^# <(.+)>/) {
-	    # <rank> read/write file
+	} elsif ($line =~ /^# <(.+)>/) {
+	    if ($notfirst == 1) {
+		print_iosummary();
+	    }
+	    $io_sum = 0;
+	    $notfirst = 1;
+	    # <rank> read/write file ntimes <n> open/fopen <n> close <n>
 	    $current_rank = $1;
 	    ($current_vec, $current_file) = (split(/[\t ]+/, $line))[2..3];
 	    $current_file =~ s/\//-/g; # the last 15 bytes of a file name only
  	    # not used in this release $ntimes = (split(/[\t ]+/, $line))[5];
+	    if ((split(/[\t ]+/, $line))[6] =~ "fopen") {
+		$is_stream = 1;
+	    }
  	    $open_time = (split(/[\t ]+/, $line))[7];
+	    $open_time -= $jobstart_time;
  	    $close_time = (split(/[\t ]+/, $line))[9];
+	    $close_time -= $jobstart_time;
 	    print TMP_RANK_O "$open_time\t$current_rank\t0\n";
 	    print TMP_RANK_C "$close_time\t$current_rank\t0\n";
 	    #close(TMP);
@@ -108,7 +122,7 @@ while ($line = <TRACE>) {
 	# time, elapsed, Kbyte
 #	($start_time, $elapsed, $io_size) = (split(/[\t ]+/, $line))[0..2];
 	($start_time, $elapsed, $io_size) = (split(/[\t ]+/, $line))[0..2];
-	$io_size = 0;
+	$io_sum += $io_size;
 	chop($start_time);
 	chop($elapsed);
 	$start_time += $diff_since_first_io;
@@ -133,7 +147,9 @@ while ($line = <TRACE>) {
 	#}
     }
 }
-
+if ($notfirst == 1) {
+    print_iosummary();
+}
 close(TMP_RANK_R);
 close(TMP_RANK_W);
 close(TMP_RANK_O);
@@ -147,8 +163,22 @@ chdir $tmp_dir;
 system "$gnuplot rank.conf";
 chdir $orig_dir;
 system "$mv $tmp_dir/history_rank.png $output_file";
+system "cp $tmp_dir/*.dat .";
 
 exit 0;
+
+sub print_iosummary
+{
+    if ($is_stream) {
+	if ($current_vec =~ "write") {
+	    print "file=$current_file, fwrite, $io_sum KB, fopen $open_time, $close_time\n";
+	} else {
+	    print "file=$current_file, fread, $io_sum KB, fopen $open_time, $close_time\n";
+	}
+    } else {
+	print "file=$current_file, $current_vec, $io_sum KB, open $open_time, $close_time\n";
+    }
+}
 
 sub make_conf
 {
