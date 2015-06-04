@@ -22,6 +22,7 @@
 #define CP_MAX_MEM_SEGMENTS 8 /* comes from darshan-mpi-io.c */
 
 extern void darshan_history_construct_indices(struct darshan_job_runtime* final_job, int rank, int* inout_count, int* lengths, void** pointers);
+extern void darshan_history_stdio_init();
 
 struct darshan_history_header	*darshan_hheader;
 double		(*__real_PMPI_Wtime)(void);
@@ -104,8 +105,11 @@ darshan_single_init()
 	cmdname = ++cp;
     }
 skip:
-    darshan_initialize(argc, argv, 1, 0);
     /* record exe and arguments */
+    darshan_initialize(argc, argv, 1, 0);
+
+    /* stdin stdout stderr entries are created at this time */
+    darshan_history_stdio_init();
 
     return;
 }
@@ -149,6 +153,8 @@ darhsan_single_exit()
         CP_UNLOCK();
         return;
     }
+    /* closing time is set to stdin/stdout/stderr */
+    darshan_history_stdio_exit();
     /* disable further tracing while hanging onto the data so that we can
      * write it out
      */

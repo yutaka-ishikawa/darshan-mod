@@ -2449,6 +2449,41 @@ static void darshan_history_write(int fd, ssize_t size, double tm1, double tm2)
     return;
 }
 #endif /* 0 */
+
+void
+darshan_history_stdio_init()
+{
+    double	tm1;
+    tm1 = darshan_wtime();
+    CP_RECORD_OPEN(0, "<stdin>", 0, 0, tm1, tm1);
+    CP_RECORD_OPEN(1, "<stdout>", 0, 0, tm1, tm1);
+    CP_RECORD_OPEN(2, "<stderr>", 0, 0, tm1, tm1);
+#ifdef HISTORY_DEBUG
+    {
+	struct darshan_file_runtime* file;
+	file = darshan_file_by_fd(0);
+	printf("0 -> %p\n", file);
+	file = darshan_file_by_fd(1);
+	printf("1 -> %p\n", file);
+	file = darshan_file_by_fd(2);
+	printf("2 -> %p\n", file);
+    }
+#endif /* HISTORY_DEBUG */
+}
+void
+darshan_history_stdio_exit()
+{
+    struct darshan_file_runtime* file;
+    double	tm1;
+
+    tm1 = darshan_wtime();
+    file = darshan_file_by_fd(0);
+    CP_F_SET(file, CP_F_CLOSE_TIMESTAMP, tm1);
+    file = darshan_file_by_fd(1);
+    CP_F_SET(file, CP_F_CLOSE_TIMESTAMP, tm1);
+    file = darshan_file_by_fd(2);
+    CP_F_SET(file, CP_F_CLOSE_TIMESTAMP, tm1);
+}
 #endif /* HISTORY */
 
 /*
