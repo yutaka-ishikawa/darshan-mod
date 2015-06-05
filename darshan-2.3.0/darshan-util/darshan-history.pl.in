@@ -84,7 +84,7 @@ while ($line = <TRACE>) {
     }
     elsif ($line =~ /^#/) {
 	if ($line =~ /^# start_time: ([\d\.]+)/) {
-	    $jobstart_time = $1;
+##	    $jobstart_time = $1;
 	} elsif ($line =~ /^# nprocs: /) {
 	    $nprocs = (split(':', $line, 2))[1];
 	    if($plot_to == 0) {
@@ -108,9 +108,9 @@ while ($line = <TRACE>) {
 		$is_stream = 1;
 	    }
  	    $open_time = (split(/[\t ]+/, $line))[7];
-	    $open_time -= $jobstart_time;
+##	    $open_time -= $jobstart_time;
  	    $close_time = (split(/[\t ]+/, $line))[9];
-	    $close_time -= $jobstart_time;
+##	    $close_time -= $jobstart_time;
 	    print TMP_RANK_O "$open_time\t$current_rank\t0\n";
 	    print TMP_RANK_C "$close_time\t$current_rank\t0\n";
 	    #close(TMP);

@@ -23,6 +23,7 @@
 
 extern void darshan_history_construct_indices(struct darshan_job_runtime* final_job, int rank, int* inout_count, int* lengths, void** pointers);
 extern void darshan_history_stdio_init();
+extern void darshan_history_stdio_exit();
 
 struct darshan_history_header	*darshan_hheader;
 double		(*__real_PMPI_Wtime)(void);
@@ -240,6 +241,18 @@ darhsan_single_exit()
 #ifdef HISTORY_DEBUG
     printf("final_job->file_count = %d\n", final_job->file_count);
 #endif /* HISTORY_DEBUG */
+    /* 
+     * Iterates through counters and adjusts timestamps to be relative to
+     * the first open function
+     */
+    {
+	int	i, j;
+	for(i = 0; i < final_job->file_count; i++)
+	    for(j=CP_F_OPEN_TIMESTAMP; j<=CP_F_WRITE_END_TIMESTAMP; j++) {
+		if(final_job->file_array[i].fcounters[j] > final_job->wtime_offset)
+		    final_job->file_array[i].fcounters[j] -= final_job->wtime_offset;
+	    }
+    }
     darshan_history_construct_indices(final_job, 0, &index_count, lengths, 
 				      pointers);
     /* compress data */
