@@ -153,6 +153,7 @@ darhsan_single_exit()
         CP_UNLOCK();
         return;
     }
+
     /* closing time is set to stdin/stdout/stderr */
     darshan_history_stdio_exit();
     /* disable further tracing while hanging onto the data so that we can

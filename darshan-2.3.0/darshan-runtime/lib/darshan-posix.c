@@ -123,6 +123,9 @@ static int darshan_mem_alignment = 1;
 #ifdef HISTORY
 static void darshan_history_read(int, ssize_t, double, double);
 static void darshan_history_write(int, ssize_t, double, double);
+#ifdef DARSHAN_SINGLE
+extern void darshan_single_init();
+#endif /* DARSHAN_SINGLE */
 #endif /* HISTORY */
 /* struct to track information about aio operations in flight */
 struct darshan_aio_tracker
@@ -2449,6 +2452,117 @@ static void darshan_history_write(int fd, ssize_t size, double tm1, double tm2)
     return;
 }
 #endif /* 0 */
+
+DARSHAN_FORWARD_DECL(fprintf, int, (FILE *stream, const char *fmt, ...));
+DARSHAN_FORWARD_DECL(printf, int, (const char *fmt, ...));
+DARSHAN_FORWARD_DECL(__fprintf_chk, int, (FILE *stream, int flag, const char *fmt, ...));
+DARSHAN_FORWARD_DECL(__printf_chk, int, (int flag, const char *fmt, ...));
+
+#ifdef DARSHAN_SINGLE
+#define CHECK_DARSHAN_INIT()				\
+{							\
+if (darshan_global_job == NULL) darshan_single_init();	\
+}
+#else
+#define CHECK_DARSHAN_INIT()
+#endif
+
+int DARSHAN_DECL(fprintf)(FILE *stream, const char *fmt, ...)
+{
+    va_list	ap;
+    int		ret, fd;
+    double	tm1, tm2;
+
+    printf("darshan-fprintf: %d\n", 10);
+    CHECK_DARSHAN_INIT();
+    MAP_OR_FAIL(fprintf);
+
+    va_start(ap, fmt);
+    tm1 = darshan_wtime();
+    ret = vfprintf(stream, fmt, ap);
+    tm2 = darshan_wtime();
+    va_end(ap);
+    CP_LOCK();
+    fd = fileno(stream);
+    CP_RECORD_WRITE(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_write(fd, ret, tm1, tm2);
+    CP_UNLOCK();
+    return ret;
+}
+
+int DARSHAN_DECL(__fprintf_chk)(FILE *stream, int flag, const char *fmt, ...)
+{
+    va_list	ap;
+    int		ret, fd;
+    double	tm1, tm2;
+
+    CHECK_DARSHAN_INIT();
+    MAP_OR_FAIL(__fprintf_chk);
+
+    va_start(ap, fmt);
+    tm1 = darshan_wtime();
+    ret = __vfprintf_chk(stream, flag, fmt, ap);
+    tm2 = darshan_wtime();
+    va_end(ap);
+    CP_LOCK();
+    fd = fileno(stream);
+    CP_RECORD_WRITE(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_write(fd, ret, tm1, tm2);
+    CP_UNLOCK();
+    return ret;
+}
+
+int DARSHAN_DECL(printf)(const char *fmt, ...)
+{
+    va_list	ap;
+    int		ret, fd;
+    double	tm1, tm2;
+
+
+    CHECK_DARSHAN_INIT();
+    MAP_OR_FAIL(printf);
+
+#ifdef HISTORY_DEBUG
+    __real_printf("darshan-printf: %s\n", fmt);
+#endif /* HISTORY_DEBUG */
+    va_start(ap, fmt);
+    tm1 = darshan_wtime();
+    ret = vfprintf(stdout, fmt, ap);
+    tm2 = darshan_wtime();
+    va_end(ap);
+    CP_LOCK();
+    fd = fileno(stdout);
+    CP_RECORD_WRITE(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_write(fd, ret, tm1, tm2);
+    CP_UNLOCK();
+    return ret;
+}
+
+int DARSHAN_DECL(__printf_chk)(int flag, const char *fmt, ...)
+{
+    va_list	ap;
+    int		ret, fd;
+    double	tm1, tm2;
+
+
+    CHECK_DARSHAN_INIT();
+    MAP_OR_FAIL(printf);
+
+#ifdef HISTORY_DEBUG
+    __real_printf("darshan-__printf_chk: %s\n", fmt);
+#endif /* HISTORY_DEBUG */
+    va_start(ap, fmt);
+    tm1 = darshan_wtime();
+    ret = __vfprintf_chk(stdout, flag, fmt, ap);
+    tm2 = darshan_wtime();
+    va_end(ap);
+    CP_LOCK();
+    fd = fileno(stdout);
+    CP_RECORD_WRITE(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_write(fd, ret, tm1, tm2);
+    CP_UNLOCK();
+    return ret;
+}
 
 void
 darshan_history_stdio_init()
