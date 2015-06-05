@@ -4,7 +4,7 @@ MPICC = mpicc
 CC = cc
 CFLAGS  = -O3 -Wall
 
-all: simple simple2 simple3
+all: simple simple2 simple3 write_test stream
 simple: simple.c
 	$(MPICC) $(CFLAGS) -o simple simple.c
 simple2: simple2.c
@@ -13,8 +13,17 @@ simple3: simple3.c
 	$(MPICC) $(CFLAGS) -o simple3 simple3.c
 ccode: ccode.c
 	$(CC) $(CFLAGS) -o ccode ccode.c
+write_test: write_test.c
+	$(CC) $(CFLAGS) -o write_test write_test.c
+stream: stream.c
+	$(CC) $(CFLAGS) -o stream stream.c
+libcopy:
+	cp -p ../darshan-2.3.0/darshan-runtime/lib/libdarshan.so .
+	cp -p ../darshan-2.3.0/darshan-runtime/lib/libdarshan-single.so .
 clean:
-	rm -f wdata* *.o simple simple2 simple3
+	rm -f darshanlog-*
+clean2:
+	rm -f wdata* *.o simple simple2 simple3 write_test stream
 sub:
 	pjsub ./run.sh
 stat:
@@ -32,12 +41,17 @@ myrun2:
 	export LD_PRELOAD=./libdarshan.so; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=10485760; mpirun -np 2 ./simple3 wdata
 
 myrunc:
-	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="w"; ./ccode a1 a2 a3 a4
+	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; ./ccode a1 a2 a3 a4
+mywritetest:
+	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; ./write_test
+mycat:
+	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; cat ccode.c >/tmp/123
+mystream:
+	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; ./stream
+mytest:
+	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; ./a.out
 top:
 	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; top
-libcopy:
-	cp -p ../darshan-2.3.0/darshan-runtime/lib/libdarshan.so .
-	cp -p ../darshan-2.3.0/darshan-runtime/lib/libdarshan-single.so .
 
 #	export LD_PRELOAD=./libdarshan.so; export DARSHAN_HISTORY_RW="w"; mpirun -np 2 ./simple2 wdata
 #
