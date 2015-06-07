@@ -2473,7 +2473,9 @@ int DARSHAN_DECL(fprintf)(FILE *stream, const char *fmt, ...)
     int		ret, fd;
     double	tm1, tm2;
 
+#ifdef HISTORY_DEBUG
     printf("darshan-fprintf: %d\n", 10);
+#endif // HISTORY_DEBUG
     CHECK_DARSHAN_INIT();
     MAP_OR_FAIL(fprintf);
 
