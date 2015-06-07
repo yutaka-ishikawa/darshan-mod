@@ -323,8 +323,8 @@ int main(int argc, char **argv)
 #endif /* HISTORY_DEBUG */
 	    for (i = 0; i < darshan_hist.nfiles; i++) {
 		struct darshan_history_util *dhup = &darshan_hist.hutil[i];
-		printf("# <%d> ", dhup->rank);
 		if (dhup->hutil_read > 0) {
+		    printf("# <%d> ", dhup->rank);
 		    if (dhup->hutil_nopen) {
 			printf("read %s ntimes %d open ",
 			       dhup->hutil_name, dhup->hutil_nopen);
@@ -339,6 +339,7 @@ int main(int argc, char **argv)
 				  dhup->hutil_rstart);
 		}
 		if (dhup->hutil_write > 0) {
+		    printf("# <%d> ", dhup->rank);
 		    if (dhup->hutil_nopen) {
 			printf("write %s ntimes %d open ",
 			       dhup->hutil_name, dhup->hutil_nopen);
