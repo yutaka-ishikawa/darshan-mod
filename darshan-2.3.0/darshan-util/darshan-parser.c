@@ -1202,14 +1202,17 @@ f2u(float f)
 static void print_history(int count, struct darshan_history_data *hdata, double tsec)
 {
     int		i;
+    double	elapse;
     double	time_sec = 0;
 
     printf("# start = %f count=%d\n", dhist_swap64(tsec), count);
     printf("# time, elapsed, Kbyte\n");
     for (i = 0; i < count; i++) {
 	time_sec += dhist_swap32(hdata[i].diff_sec);
+	elapse = dhist_swap32(hdata[i].time_sec);
 	printf("%f, %f, %f\n", (float) time_sec,
-	       dhist_swap32(hdata[i].time_sec),  dhist_swap32(hdata[i].size));
+	       elapse,  dhist_swap32(hdata[i].size));
+	time_sec += elapse;
     }
 }
 #endif /* HISTORY */

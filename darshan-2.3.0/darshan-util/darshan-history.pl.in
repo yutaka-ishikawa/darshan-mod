@@ -137,7 +137,7 @@ while ($line = <TRACE>) {
 	} else {
 	    print TMP_RANK_W "$start_time\t$current_rank\t0\n$end_time\t$current_rank\t0\n\n\n";
 	}
-	$start_time += $elapsed;
+	### $start_time += $elapsed;
 
 	#if($end_time > $th_time) {
 	    #print TMP "$th_time, $io_sum\n";
