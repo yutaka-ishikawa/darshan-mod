@@ -14,21 +14,20 @@ $ ./configure --prefix=$TOP/darshan/
 $ make
 $ make install
 You will have libdarshan.so and libdarshan-single.so under the
-$(TOP)/darshan/lib directory.
+$TOP/darshan/lib directory.
 
-$ cd $(TOP)/darshan-2.3.0/darshan-util
+$ cd $TOP/darshan-2.3.0/darshan-util
 $ ./configure --prefix=$TOP/darshan/ CC=cc CFLAGS=-DHISTORY
 $ make
 $ make install
 
 /* testing */
-$ cd ../
+$ PATH=$PATH:$TOP/darshan/bin
 $ mkdir tmp
 $ cd tmp
-$ cp ../darshan-runtim/lib/libdarshan-single.o .
-$ (export LD_PRELOAD=./libdarshan-single.so; cp libdarshan-single.so /tmp/)
+$ (export LD_PRELOAD=¡ðTOP/lib/libdarshan-single.so; cp /bin/ls /tmp/)
 or
-$ (export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=104857600; cp libdarshan-single.so /tmp/ )
+$ (export LD_PRELOAD=$TOP/lib/libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=104857600; cp libdarshan-single.so /tmp/ )
 $ darshan-fileio.pl <log file>
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
