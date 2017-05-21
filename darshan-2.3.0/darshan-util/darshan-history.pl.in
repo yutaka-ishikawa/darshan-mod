@@ -97,7 +97,7 @@ while ($line = <TRACE>) {
 	} elsif ($line =~ /^# start = ([\d\.]+)/) {
 #YI	    $diff_since_first_io = $1 - $minimum_start_time;
 	    $diff_since_first_io = $1;
-	} elsif ($line =~ /^# <(.+)>/) {
+	} elsif ($line =~ /^# <([0-9]+)>/) {
 	    if ($notfirst == 1) {
 		print_iosummary();
 	    }

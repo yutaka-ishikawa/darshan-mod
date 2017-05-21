@@ -4200,7 +4200,7 @@ DARSHAN_UTIL_VERSION="2.3.0"
 
 
 
-ac_config_files="$ac_config_files Makefile darshan-job-summary/bin/darshan-job-summary.pl darshan-history.pl maint/darshan-util.pc"
+ac_config_files="$ac_config_files Makefile darshan-job-summary/bin/darshan-job-summary.pl darshan-history.pl darshan-fileio.pl maint/darshan-util.pc"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure

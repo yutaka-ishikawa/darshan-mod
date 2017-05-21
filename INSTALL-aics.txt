@@ -1,21 +1,35 @@
 Extended Darshan (Based on 2.3.0 release)
-					      April 21, 2015
+					      May 21, 2017
+					      System Software Research Team
 					      System Software Development Team
 					       			    RIKEN AICS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 In case of Linux-Xeon
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-$ cd $(TOP)/darshan-2.3.0/darshan-runtime
-$ ./configure --with-mem-align=8 \
+$ cd $TOP/darshan-2.3.0/darshan-runtime
+$ ./configure --prefix=$TOP/darshan/
+   --with-mem-align=8 \
   --with-log-path=./darshan --with-jobid-env=PBS_JOBID \
   CC=mpicc CFLAGS="-Wall -O2 -g -DHISTORY"
 $ make
-You will get the libdarshan.so under the lib directory.
+$ make install
+You will have libdarshan.so and libdarshan-single.so under the
+$(TOP)/darshan/lib directory.
 
 $ cd $(TOP)/darshan-2.3.0/darshan-util
-$ ./configure CC=cc CFLAGS=-DHISTORY
+$ ./configure --prefix=$TOP/darshan/ CC=cc CFLAGS=-DHISTORY
 $ make
-$ sudo make install
+$ make install
+
+/* testing */
+$ cd ../
+$ mkdir tmp
+$ cd tmp
+$ cp ../darshan-runtim/lib/libdarshan-single.o .
+$ (export LD_PRELOAD=./libdarshan-single.so; cp libdarshan-single.so /tmp/)
+or
+$ (export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=104857600; cp libdarshan-single.so /tmp/ )
+$ darshan-fileio.pl <log file>
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 In case of K
