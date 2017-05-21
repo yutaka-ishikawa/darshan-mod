@@ -113,7 +113,6 @@ Environment Variables extended by RIKENN AICS
 
 Note:
   - The last 15 bytes of a file name is only saved. This is a darshan feature.
-  - We will follow the latest distribuion, 2.3.1, soon.
 
 -------------------------------------------------------------------------------
 HISTORY:
