@@ -2591,14 +2591,15 @@ darshan_history_stdio_exit()
 {
     struct darshan_file_runtime* file;
     double	tm1;
+    int		fd;
 
     tm1 = darshan_wtime();
-    file = darshan_file_by_fd(0);
-    CP_F_SET(file, CP_F_CLOSE_TIMESTAMP, tm1);
-    file = darshan_file_by_fd(1);
-    CP_F_SET(file, CP_F_CLOSE_TIMESTAMP, tm1);
-    file = darshan_file_by_fd(2);
-    CP_F_SET(file, CP_F_CLOSE_TIMESTAMP, tm1);
+    for (fd = 0; fd < 3; fd++) {
+	file = darshan_file_by_fd(0);
+	if (file) {
+	    CP_F_SET(file, CP_F_CLOSE_TIMESTAMP, tm1);
+	}
+    }
 }
 #endif /* HISTORY */
 
