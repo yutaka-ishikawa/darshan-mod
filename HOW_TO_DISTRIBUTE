@@ -1,0 +1,5 @@
+$ mkdir tmp
+$ git clone git@git.sys.aics.riken.jp:software/darshan
+$ cd darshan
+$ sh ./DIST-source
+
