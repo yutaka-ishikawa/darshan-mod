@@ -8,7 +8,7 @@ In case of Linux-Xeon
 $ cd $(TOP)/darshan-2.3.0/darshan-runtime
 $ ./configure --with-mem-align=8 \
   --with-log-path=./darshan --with-jobid-env=PBS_JOBID \
-  CC=mpicc CFLAGS="-O2 -g -DHISTORY"
+  CC=mpicc CFLAGS="-Wall -O2 -g -DHISTORY"
 $ make
 You will get the libdarshan.so under the lib directory.
 

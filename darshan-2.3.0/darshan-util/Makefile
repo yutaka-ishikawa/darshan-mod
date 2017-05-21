@@ -29,7 +29,7 @@ CFLAGS = -I . -I $(srcdir) -I $(srcdir)/../ -DDARSHAN_CONFIG_H=\"darshan-util-co
 CFLAGS_SHARED = $(CFLAGS) -shared -fpic -DPIC 
 LDFLAGS=
 
-CC=mpicc
+CC=cc
 LD=@LD@
 AR=@AR@
 
@@ -97,6 +97,7 @@ endif
 	install -m 644 $(srcdir)/darshan-logutils.h $(includedir)
 	install -m 644 $(DARSHAN_LOG_FORMAT) $(includedir)
 	install -m 755 darshan-job-summary/bin/darshan-job-summary.pl $(bindir)
+	install -m 755 darshan-history.pl $(bindir)
 	install -d $(libdir)/TeX
 	install -m 644 $(srcdir)/darshan-job-summary/lib/TeX/Encode.pm $(libdir)/TeX/
 	install -d $(libdir)/Number

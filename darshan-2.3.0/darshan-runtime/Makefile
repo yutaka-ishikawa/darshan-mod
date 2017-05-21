@@ -1,4 +1,4 @@
-all: lib/libdarshan-posix.a lib/libdarshan-mpi-io.a lib/libdarshan-stubs.a
+all: lib/libdarshan-posix.a lib/libdarshan-mpi-io.a lib/libdarshan-stubs.a lib/libdarshan-single.a
 
 DESTDIR =
 srcdir = .
@@ -19,14 +19,14 @@ DARSHAN_LOG_FORMAT = $(srcdir)/../darshan-log-format.h
 DARSHAN_VERSION = 2.3.0
 
 ifndef DISABLE_LDPRELOAD
-all: lib/libdarshan.so 
+all: lib/libdarshan.so lib/libdarshan-single.so
 endif
 
 
 
-CFLAGS = -DDARSHAN_CONFIG_H=\"darshan-runtime-config.h\" -I . -I ../ -I $(srcdir) -I$(srcdir)/../ -DHISTORY  -D_LARGEFILE64_SOURCE 
+CFLAGS = -DDARSHAN_CONFIG_H=\"darshan-runtime-config.h\" -I . -I ../ -I $(srcdir) -I$(srcdir)/../ -Wall -O2 -g -DHISTORY  -D_LARGEFILE64_SOURCE 
 
-CFLAGS_SHARED = -DDARSHAN_CONFIG_H=\"darshan-runtime-config.h\" -I . -I$(srcdir) -I$(srcdir)/../ -DHISTORY  -D_LARGEFILE64_SOURCE -shared -fpic -DPIC -DDARSHAN_PRELOAD
+CFLAGS_SHARED = -DDARSHAN_CONFIG_H=\"darshan-runtime-config.h\" -I . -I$(srcdir) -I$(srcdir)/../ -Wall -O2 -g -DHISTORY  -D_LARGEFILE64_SOURCE -shared -fpic -DPIC -DDARSHAN_PRELOAD
 
 LIBS = -lz @LIBBZ2@
 
@@ -93,8 +93,37 @@ lib/libdarshan-stubs.a: lib/darshan-pnetcdf-stubs.o lib/darshan-hdf5-stubs.o
 lib/libdarshan-posix.a: lib/darshan-posix.o lib/lookup3.o lib/lookup8.o 
 	ar rcs $@ $^
 
-lib/libdarshan.so: lib/darshan-mpi-io.po lib/darshan-mpi-init-finalize.po lib/darshan-pnetcdf.po lib/darshan-hdf5.po lib/darshan-posix.po lib/lookup3.po lib/lookup8.po
+lib/libdarshan.so: lib/darshan-mpi-io.po lib/darshan-mpi-init-finalize.po lib/darshan-pnetcdf.po lib/darshan-hdf5.po lib/darshan-posix.po lib/lookup3.po lib/lookup8.po lib/darshan-history.po
 	$(CC) $(CFLAGS_SHARED) $(LDFLAGS) -o $@ $^ -lpthread -lrt -lz -ldl
+
+###############################################################################
+#
+CFLAGS_SINGLE_SHARED = $(CFLAGS_SHARED) -DDARSHAN_SINGLE
+CFLAGS_SINGLE = $(CFLAGS) -DDARSHAN_SINGLE
+lib/libdarshan-single.so: lib/darshan-single.po lib/darshan-history.po lib/darshan-posix-single.po lib/lookup3.po lib/lookup8.po
+	$(CC) $(CFLAGS_SINGLE_SHARED) $(LDFLAGS) -o $@ $^ -lpthread -lrt -lz -ldl
+
+lib/libdarshan-single.a: lib/darshan-single.o lib/darshan-history.o lib/darshan-posix-single.o lib/lookup3.o lib/lookup8.o
+	ar rcs $@ $^
+
+lib/darshan-single.o: lib/darshan-single.c darshan.h darshan-dynamic.h $(DARSHAN_LOG_FORMA) | lib
+	$(CC) $(CFLAGS_SINGLE) -c $< -o $@
+
+lib/darshan-single.po: lib/darshan-single.c darshan.h darshan-dynamic.h $(DARSHAN_LOG_FORMA) | lib
+	$(CC) $(CFLAGS_SINGLE_SHARED) -c $< -o $@
+
+lib/darshan-history.o: lib/darshan-history.c darshan.h darshan-dynamic.h $(DARSHAN_LOG_FORMA) | lib
+	$(CC) $(CFLAGS) -c $< -o $@
+
+lib/darshan-history.po: lib/darshan-history.c darshan.h darshan-dynamic.h $(DARSHAN_LOG_FORMA) | lib
+	$(CC) $(CFLAGS) $(CFLAGS_SHARED) -c $< -o $@
+
+lib/darshan-posix-single.o: lib/darshan-posix.c darshan.h $(DARSHAN_LOG_FORMAT) | lib
+	$(CC) $(CFLAGS_SINGLE) -c $< -o $@
+
+lib/darshan-posix-single.po: lib/darshan-posix.c darshan.h $(DARSHAN_LOG_FORMAT) | lib
+	$(CC) $(CFLAGS_SINGLE_SHARED) -c $< -o $@
+###############################################################################
 
 install:: all
 	install -d $(libdir)

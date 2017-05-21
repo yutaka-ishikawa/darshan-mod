@@ -4,7 +4,7 @@ MPICC = mpicc
 CC = cc
 CFLAGS  = -O3 -Wall
 
-all: simple simple2 simple3 write_test stream
+all: simple simple2 simple3 ccode write_test stream
 simple: simple.c
 	$(MPICC) $(CFLAGS) -o simple simple.c
 simple2: simple2.c
@@ -50,6 +50,8 @@ mystream:
 	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; ./stream
 mytest:
 	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; ./a.out
+mycc:
+	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; cc -O3 stream.c
 top:
 	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; top
 

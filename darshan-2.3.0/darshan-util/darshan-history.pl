@@ -45,6 +45,7 @@ my $plot_end = "*";
 my $plot_data = "\"file-access-rank_read.dat\" using 1:2 with lines lw 1 lt 1 title \"read\", \"file-access-rank_write.dat\" using 1:2 with lines lw 1 lt 2  title \"write\", \"file-access-rank_open.dat\" using 1:2 with points pt 1  title \"open\", \"file-access-rank_close.dat\" using 1:2 with points pt 2  title \"close\"";
 my $plot_caption = "Timespan for read/write access on files";
 my $plot_ytics = "";
+my $print_summary = 0;
 
 process_args();
 
@@ -76,6 +77,9 @@ my $close_time = 0;
 my $notfirst = 0;
 my $is_stream = 0;
 
+if ($print_summary) {
+    print "#rank,filename,\"read|write\",size,\"stream|fd\",open,close,start\n";
+}
 while ($line = <TRACE>) {
     chomp($line);
 
@@ -84,7 +88,7 @@ while ($line = <TRACE>) {
     }
     elsif ($line =~ /^#/) {
 	if ($line =~ /^# start_time: ([\d\.]+)/) {
-	    $jobstart_time = $1;
+##	    $jobstart_time = $1;
 	} elsif ($line =~ /^# nprocs: /) {
 	    $nprocs = (split(':', $line, 2))[1];
 	    if($plot_to == 0) {
@@ -108,9 +112,9 @@ while ($line = <TRACE>) {
 		$is_stream = 1;
 	    }
  	    $open_time = (split(/[\t ]+/, $line))[7];
-	    $open_time -= $jobstart_time;
+##	    $open_time -= $jobstart_time;
  	    $close_time = (split(/[\t ]+/, $line))[9];
-	    $close_time -= $jobstart_time;
+##	    $close_time -= $jobstart_time;
 	    print TMP_RANK_O "$open_time\t$current_rank\t0\n";
 	    print TMP_RANK_C "$close_time\t$current_rank\t0\n";
 	    #close(TMP);
@@ -133,6 +137,7 @@ while ($line = <TRACE>) {
 	} else {
 	    print TMP_RANK_W "$start_time\t$current_rank\t0\n$end_time\t$current_rank\t0\n\n\n";
 	}
+	### $start_time += $elapsed;
 
 	#if($end_time > $th_time) {
 	    #print TMP "$th_time, $io_sum\n";
@@ -163,21 +168,20 @@ chdir $tmp_dir;
 system "$gnuplot rank.conf";
 chdir $orig_dir;
 system "$mv $tmp_dir/history_rank.png $output_file";
-system "cp $tmp_dir/*.dat .";
+###system "cp $tmp_dir/*.dat .";
 
 exit 0;
 
 sub print_iosummary
 {
+    if ($print_summary == 0) { return; }
     if ($is_stream) {
-	if ($current_vec =~ "write") {
-	    print "file=$current_file, fwrite, $io_sum KB, fopen $open_time, $close_time\n";
-	} else {
-	    print "file=$current_file, fread, $io_sum KB, fopen $open_time, $close_time\n";
-	}
+	$otype = "stream";
     } else {
-	print "file=$current_file, $current_vec, $io_sum KB, open $open_time, $close_time\n";
+	$otype = "fd";
     }
+    print "$current_rank,$current_file,$current_vec,$io_sum,$otype,$open_time,$close_time,$diff_since_first_io\n";
+#    print "rank: $current_rank file: $current_file op: $current_vec $io_sum KB, $otype $open_time, $close_time\n";
 }
 
 sub make_conf
@@ -208,7 +212,7 @@ plot $plot_data
 
 sub process_args
 {
-    use vars qw( $opt_help $opt_output $opt_verbose $opt_from_rank $opt_to_rank $opt_start_time $opt_end_time $opt_caption $opt_nocaption);
+    use vars qw( $opt_help $opt_output $opt_verbose $opt_from_rank $opt_to_rank $opt_start_time $opt_end_time $opt_caption $opt_nocaption $opt_summary);
 
     Getopt::Long::Configure("no_ignore_case", "bundling");
     GetOptions( "help",
@@ -222,7 +226,8 @@ sub process_args
 		"end_time=s",
 		"plot=s",
 		"caption=s",
-		"nocaption"
+		"nocaption",
+		"summary"
 	);
 
     if($opt_help)
@@ -254,6 +259,11 @@ sub process_args
     if($opt_output)
     {
 	$output_file = $opt_output;
+    }
+
+    if($opt_summary)
+    {
+	$print_summary = 1;
     }
 
     if($opt_verbose)
@@ -438,6 +448,7 @@ Usage: $PROGRAM_NAME <options> input_file
     --nocaption                  Not print caption
     --output <output_file>       Specifies a file to write png output to
                                  (defaults to ./history_rank.png)
+    --summary                    print summary in the csv format
     --verbose                    Prints and retains tmpdir used for output
 
 Purpose:

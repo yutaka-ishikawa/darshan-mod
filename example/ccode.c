@@ -16,21 +16,25 @@ main()
 
     fname = "tdata";
     printf("start\n");
-    fd = open(fname, O_CREAT|O_WRONLY, 0644);
-    printf("open: fd=%d\n", fd);
-    if (fd < 0) {
-	fprintf(stderr, "Cannot create file %s\n", fname);
-    }
-    wsz = 1024;
-    for (i = 0; i < 100; i++) {
-	totw = write(fd, buf, wsz);
-	if (wsz < 0) {
-	    printf("Cannot write data after writing %ld MB\n", totw);
+    for (i = 0; i < 4; i++) {
+	if ((fd = open(fname, O_CREAT|O_WRONLY, 0644)) < 0) {
+	    if ((fd = open(fname, O_WRONLY)) < 0) {
+		fprintf(stderr, "Cannot open file %s\n", fname);
+		exit(-1);
+	    }
+	} else {
+	    printf("open: fd=%d\n", fd);
 	}
-	usleep(10000);
+	wsz = 1024;
+	for (i = 0; i < 100; i++) {
+	    totw = write(fd, buf, wsz);
+	    if (wsz < 0) {
+		printf("Cannot write data after writing %ld MB\n", totw);
+	    }
+	    usleep(10000);
+	}
+	sleep(1);
+	close(fd);
     }
-    sleep(1);
-    close(fd);
-//    exit(0);
     return 0;
 }

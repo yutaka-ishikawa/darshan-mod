@@ -50,15 +50,28 @@ main(int argc, char **argv)
     wsz = wtot = 0;
     memset(buf, 0, BSIZE);
     fname = argv[1];
+#if 0
     fd1 = open_file(O_CREAT|O_WRONLY, argv[1], myrank, "a", 0);
     if (fd1 < 0) {
 	fprintf(stderr, "Cannot create file %s\n", fname);
 	cnd = -1; goto ext;
     }
+    for (step = 1; step < 2; step++) {
+	wsz = write(fd1, buf, BSIZE);
+	if (wsz != BSIZE) {
+	    printf("Cannot write data after writing %ld MB\n", wtot);
+	}
+	wtot += wsz;
+    }
+    sleep(1);
     close(fd1);
+    sleep(1);
+#endif
     for (times = 0; times < TCOUNT; times++) {
 	fd1 = open_file(O_APPEND|O_WRONLY, fname, myrank, "a", 0);
-	fd2 = open_file(O_CREAT|O_WRONLY, fname, myrank, "b", times);
+//	fd2 = open_file(O_CREAT|O_WRONLY, fname, myrank, "b", times);
+	fd2 = open_file(O_APPEND|O_WRONLY, fname, myrank, "b", times);
+	printf("fd1(%d) fd2(%d)\n", fd1, fd2);
 	if (fd2 < 0) {
 	    fprintf(stderr, "Cannot create file %s\n", fname);
 	    cnd = -1; goto ext;
@@ -67,13 +80,13 @@ main(int argc, char **argv)
 	    for (i = 0; i < 3; i++) {
 		wsz = write(fd1, buf, WSIZE*step);
 		if (wsz < 0) {
-		    printf("Cannot write data after writing %ld MB\n", wtot);
 		    close(fd1); close(fd2);
 		    cnd = -1; goto ext;
 		}
 		wsz = write(fd2, buf, WSIZE*step);
 		if (wsz < 0) {
-		    printf("Cannot write data after writing %ld MB\n", wtot);
+		    printf("Cannot write data after writing %f MB\n",
+			   ((float)wtot)/1000000.0);
 		    close(fd1); close(fd2);
 		    cnd = -1; goto ext;
 		}
