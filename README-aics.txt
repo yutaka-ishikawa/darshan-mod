@@ -119,6 +119,10 @@ Note:
 HISTORY:
 05/21/2017
  - a bug fix reported by AXE is merged
+ - the following bug is fixed
+    if a log file is created with no "DARSHAN_HISTORY_RW" environment,
+    the log file does not contain any history of file I/O.
+    In this case, the darshan-parser does not read the last opened file.
 05/28/2015
  - timestamps of open/close/read/write system calls are relative
    to timestamp of MPI_Init.
