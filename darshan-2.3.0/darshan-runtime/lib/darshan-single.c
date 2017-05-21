@@ -57,6 +57,24 @@ darshan_single_wtime()
     return dt;
 }
 
+#ifdef HISTORY_DEBUG
+void
+darshan_single_last_string_msg(char *where, char *msg)
+{
+    char buf[256];
+    sprintf(buf, "echo \"%s %s\" >>/tmp/dlog", where, msg);
+    system(buf);
+}
+
+void
+darshan_single_last_int_msg(char *where, int val)
+{
+    char buf[256];
+    sprintf(buf, "echo \"%s %d\" >>/tmp/dlog", where, val);
+    system(buf);
+}
+#endif /* HISTORY_DEBUG */
+
 void
 darshan_single_init()
 {
@@ -129,6 +147,9 @@ darshan_mnt_id_from_path(const char* path, int64_t* device_id, int64_t* block_si
 
 /*
  * copied from darshan_shutdown() in darshan-mpi-io.c
+ *	Be sure that debug messages cannot be written
+ *	if stderr has been closed before the exit system call.
+ *	An example is the cp command.
  */
 static void
 darhsan_single_exit()

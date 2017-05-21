@@ -23,7 +23,7 @@ libcopy:
 clean:
 	rm -f darshanlog-*
 clean2:
-	rm -f wdata* *.o simple simple2 simple3 write_test stream
+	rm -f wdata* *.o simple simple2 simple3 ccode write_test stream
 sub:
 	pjsub ./run.sh
 stat:

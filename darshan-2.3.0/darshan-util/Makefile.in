@@ -67,7 +67,7 @@ darshan-logutils.po: darshan-logutils.c
 
 libdarshan-util.so: darshan-logutils.po
 	$(CC) $(CFLAGS_SHARED) $(LDFLAGS) -o $@ $^ $(LIBS)
-	
+
 darshan-util-lib: darshan-logutils.o
 	ar rcs libdarshan-util.a $<
 
@@ -98,6 +98,7 @@ endif
 	install -m 644 $(DARSHAN_LOG_FORMAT) $(includedir)
 	install -m 755 darshan-job-summary/bin/darshan-job-summary.pl $(bindir)
 	install -m 755 darshan-history.pl $(bindir)
+	install -m 755 darshan-fileio.pl $(bindir)
 	install -d $(libdir)/TeX
 	install -m 644 $(srcdir)/darshan-job-summary/lib/TeX/Encode.pm $(libdir)/TeX/
 	install -d $(libdir)/Number

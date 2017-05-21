@@ -130,8 +130,10 @@ install:: all
 	install -m 755 lib/libdarshan-posix.a $(libdir)
 	install -m 755 lib/libdarshan-mpi-io.a $(libdir)
 	install -m 755 lib/libdarshan-stubs.a $(libdir)
+	install -m 755 lib/libdarshan-single.a $(libdir)
 ifndef DISABLE_LDPRELOAD
 	install -m 755 lib/libdarshan.so $(libdir)
+	install -m 755 lib/libdarshan-single.so $(libdir)
 endif
 	install -d $(bindir)
 	install -m 755 darshan-mk-log-dirs.pl $(bindir)

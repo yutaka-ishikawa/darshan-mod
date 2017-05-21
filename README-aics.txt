@@ -1,5 +1,6 @@
 Extended Darshan (Based on 2.3.0 release)
-					      May 28, 2015
+					      May 21, 2017
+					      System Software Research Team
 					      System Software Development Team
 					       			    RIKEN AICS
 					      Fujitsu Ltd.
@@ -116,8 +117,8 @@ Note:
 
 -------------------------------------------------------------------------------
 HISTORY:
-04/21/2015
- - First Release
+05/21/2017
+ - a bug fix reported by AXE is merged
 05/28/2015
  - timestamps of open/close/read/write system calls are relative
    to timestamp of MPI_Init.
@@ -125,5 +126,7 @@ HISTORY:
    timestamps of syste calls are related to timestamp of the first open
    system call.
  - Fujitsu provides the darshan-history.pl tool which shows file I/O history.
+04/21/2015
+ - First Release
 	
 -- Yutaka Ishikawa, yutaka.ishikawa@riken.jp

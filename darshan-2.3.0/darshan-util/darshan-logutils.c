@@ -1408,6 +1408,10 @@ static int getfile_internal_204h(darshan_fd fd, struct darshan_job *job,
     /* checking if the field of darshan_history_header */
     curpos = fd->pos;
     ret = darshan_log_read(fd, darshan_hheader.magic, HISTMAGIC_SIZE);
+    if (ret == 0) {
+	/* the end of file */
+	return iret;
+    }
     if (ret != HISTMAGIC_SIZE) {
 	/* the end of file or error */
 #ifdef HISTORY_DEBUG
