@@ -1,5 +1,5 @@
 Extended Darshan (Based on 2.3.0 release)
-					      May 21, 2017
+					      May 29, 2017
 					      System Software Research Team
 					      System Software Development Team
 					       			    RIKEN AICS
@@ -119,6 +119,13 @@ Note:
 
 -------------------------------------------------------------------------------
 HISTORY:
+05/29/2017
+ - The "-DHISTORY_CALLER" option is added.
+   At logging read/write system call, its caller name is logged.
+   The runtime libraries and tools must be compiled with
+   "-DHISTORY_CALLER" option.
+   Applications should be compiled with the "-g" option
+   without "-O2" nor "-O3" option, and linked with the "-rdynamic" option.
 05/21/2017
  - a bug fix reported by AXE is merged
  - the following bug is fixed

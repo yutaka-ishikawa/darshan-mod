@@ -1,5 +1,5 @@
 Extended Darshan (Based on 2.3.0 release)
-					      May 21, 2017
+					      May 29, 2017
 					      System Software Research Team
 					      System Software Development Team
 					       			    RIKEN AICS
@@ -10,17 +10,21 @@ $ cd $TOP/darshan-2.3.0/darshan-runtime
 $ ./configure --prefix=$TOP/darshan/
    --with-mem-align=8 \
   --with-log-path=./darshan --with-jobid-env=PBS_JOBID \
-  CC=mpicc CFLAGS="-Wall -O2 -g -DHISTORY"
+  CC=mpicc CFLAGS="-Wall -O2 -g -DHISTORY -DHISTORY_CALLER"
 $ make
 $ make install
 You will have libdarshan.so and libdarshan-single.so under the
 $TOP/darshan/lib directory.
 
 $ cd $TOP/darshan-2.3.0/darshan-util
-$ ./configure --prefix=$TOP/darshan/ CC=cc CFLAGS=-DHISTORY
+$ ./configure --prefix=$TOP/darshan/ CC=cc CFLAGS="-DHISTORY -DHISTORY_CALLER"
 $ make
 $ make install
 
+NOTE:
+The "-DHISTORY_CALLER" option enables that function names calling
+read/write system call are logged.
+%-----------------------------------------------------------------------
 /* testing */
 $ PATH=$PATH:$TOP/darshan/bin
 $ mkdir tmp
