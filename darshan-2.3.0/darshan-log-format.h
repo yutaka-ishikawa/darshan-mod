@@ -269,6 +269,9 @@ struct darshan_history_data {
     float	size; /* KB */
     float	diff_sec;
     float	time_sec;
+#ifdef HISTORY_CALLER
+    char	funcname[CP_NAME_SUFFIX_LEN+1];
+#endif /* HISTORY_CALLER */
 };
 #define SIZE_HISTORY_DATA	sizeof(struct darshan_history_data)
 #endif /* HISTORY */

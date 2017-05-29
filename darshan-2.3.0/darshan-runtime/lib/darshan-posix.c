@@ -127,6 +127,18 @@ static void darshan_history_write(int, ssize_t, double, double);
 extern void darshan_single_init();
 #endif /* DARSHAN_SINGLE */
 #endif /* HISTORY */
+#ifdef HISTORY_CALLER
+#include <regex.h>
+#include <execinfo.h>
+#define BT_LEVEL	4
+#define FNAME_SIZE	CP_NAME_SUFFIX_LEN
+static void	mybt_show(char*, int);
+static void	mybt_init();
+static int	mybt_level = BT_LEVEL;
+static int	mybt_first;
+static regex_t	preg;
+static void	*trace[10];
+#endif /* HISTORY_CALLER */
 /* struct to track information about aio operations in flight */
 struct darshan_aio_tracker
 {
@@ -2369,6 +2381,9 @@ static void darshan_history_rw(struct history *hist, ssize_t size,
     hep->hist_ent[offset].size = swap32(kb);
     hep->hist_ent[offset].diff_sec = swap32(cur);
     hep->hist_ent[offset].time_sec = swap32(elapsed);
+#ifdef HISTORY_CALLER
+    mybt_show(hep->hist_ent[offset].funcname, CP_NAME_SUFFIX_LEN);
+#endif /* HISTORY_CALLER */
     hep->hist_offset++;
     hist->hist_total++;
     hist->hist_last = tm2;
@@ -2602,6 +2617,96 @@ darshan_history_stdio_exit()
     }
 }
 #endif /* HISTORY */
+#ifdef HISTORY_CALLER
+void
+mybt_init()
+{
+    char	*regex = ".*(\\(.*\\))";
+    int		cc, i;
+    char	*cp;
+
+    if ((cc = regcomp(&preg, regex, 0)) < 0) {
+	char	errbuf[1024];
+	regerror(cc, &preg, errbuf, 1024);
+	fprintf(stderr, "compile error: %s\n", errbuf);
+	exit(-1);
+    }
+    cp = getenv("DARSHAN_HISTORY_FUNCALL_LEVEL");
+    if (cp) {
+	i = atoi(cp);
+	if (i > 0) {
+	    mybt_level = i;
+	}
+    }
+}
+
+static char	fmtbuf[256], cmdbuf[256];
+
+static void
+mybt_msg(char *fmt, ...)
+{
+    va_list	ap;
+
+    va_start(ap, fmt);
+    vsnprintf(fmtbuf, 256, fmt, ap);
+    snprintf(cmdbuf, 256, "echo \"%s\" >>/tmp/dlog", fmtbuf);
+    system(cmdbuf);
+}
+
+void
+mybt_show(char *str, int size)
+{
+    int		cc, level;
+    char	**cp;
+    regmatch_t	pmatch[4];
+
+    if (mybt_first == 0) {
+	mybt_init();
+	mybt_first = 1;
+    }
+    level = backtrace(trace, 10);
+    cp = backtrace_symbols(trace, 10);
+    if (level < 2 || cp == NULL) {
+	*str = 0;
+	if (cp != NULL) free(cp);
+	return;
+    }
+#if 0
+    mybt_msg("  YI: mybt_show");
+    { int i;
+	for (i = 0; i < level; i++) {
+	    mybt_msg("  YI: level=%d =%s", i, cp[i]);
+	}
+    }
+#endif /* 0 */
+    *str = 0;
+    if (level > mybt_level) {
+	level = mybt_level;
+    }
+    if ((cc = regexec(&preg, cp[level], 1, pmatch, 0)) < 0) {
+	char	errbuf[1024];
+	regerror(cc, &preg, errbuf, 1024);
+	fprintf(stderr, "error: %s \n", errbuf);
+    } else {
+	if (cc != REG_NOMATCH) {
+	    char	*mstart = &cp[level][pmatch[0].rm_so];
+	    char	*mend = &cp[level][pmatch[0].rm_eo];
+	    char	*fs, *fe;
+	    if ((fs = index(mstart,'(')) == NULL
+		|| (fe = index(mstart, ')')) == NULL) {
+		fs = mstart; fe = mend;
+	    } else if ((fs+1) == fe) {
+		fs += 2; fe = mend;
+	    } else {
+		fs++;  *fe = 0;
+	    }
+	    fs = (fe - FNAME_SIZE) > fs ? (fe - FNAME_SIZE) : fs;
+	    strncpy(str, fs, FNAME_SIZE);
+	}
+    }
+    free(cp);
+}
+#endif /* HISTORY_CALLER */
 
 /*
  * Local variables:

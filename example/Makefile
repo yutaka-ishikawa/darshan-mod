@@ -2,7 +2,9 @@
 #CFLAGS  = -DFJ_MPI -O3 -Xg
 MPICC = mpicc
 CC = cc
-CFLAGS  = -O3 -Wall
+#CFLAGS  = -O3 -Wall  ## backtrace does not work properly
+#CFLAGS  = -O2 -Wall  ## backtrace does not work properly
+CFLAGS  = -O -Wall
 
 all: simple simple2 simple3 ccode write_test stream
 simple: simple.c
@@ -11,10 +13,12 @@ simple2: simple2.c
 	$(MPICC) $(CFLAGS) -o simple2 simple2.c
 simple3: simple3.c
 	$(MPICC) $(CFLAGS) -o simple3 simple3.c
-ccode: ccode.c
-	$(CC) $(CFLAGS) -o ccode ccode.c
+ccode: ccode.c ccode-func.o
+	$(CC) $(CFLAGS) -g -o ccode ccode.c ccode-func.o -rdynamic
+ccode-func.o:  ccode-func.c
+	$(CC) $(CFLAGS) -g -c $^
 write_test: write_test.c
-	$(CC) $(CFLAGS) -o write_test write_test.c
+	$(CC) $(CFLAGS) -g -o write_test write_test.c  -rdynamic
 stream: stream.c
 	$(CC) $(CFLAGS) -o stream stream.c
 libcopy:
@@ -41,7 +45,12 @@ myrun2:
 	export LD_PRELOAD=./libdarshan.so; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=10485760; mpirun -np 2 ./simple3 wdata
 
 myrunc:
-	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; ./ccode a1 a2 a3 a4
+	(export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; ./ccode a1 a2 a3 a4)
+#	(export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_FUNCALL_LEVEL=2; export DARSHAN_HISTORY_RW="rw"; ./ccode a1 a2 a3 a4)
+#	(export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_FUNCALL_LEVEL=3; export DARSHAN_HISTORY_RW="rw"; ./ccode a1 a2 a3 a4)
+#	(export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_FUNCALL_LEVEL=4; export DARSHAN_HISTORY_RW="rw"; ./ccode a1 a2 a3 a4)
+#	(export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_FUNCALL_LEVEL=5; export DARSHAN_HISTORY_RW="rw"; ./ccode a1 a2 a3 a4)
+
 mywritetest:
 	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; ./write_test
 mycat:

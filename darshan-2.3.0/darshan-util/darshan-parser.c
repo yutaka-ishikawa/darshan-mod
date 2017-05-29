@@ -1206,12 +1206,21 @@ static void print_history(int count, struct darshan_history_data *hdata, double 
     double	time_sec = 0;
 
     printf("# start = %f count=%d\n", dhist_swap64(tsec), count);
+#ifdef HISTORY_CALLER
+    printf("# time, elapsed, Kbyte, func name\n");
+#else
     printf("# time, elapsed, Kbyte\n");
+#endif /* HISTORY_CALLER */
     for (i = 0; i < count; i++) {
 	time_sec += dhist_swap32(hdata[i].diff_sec);
 	elapse = dhist_swap32(hdata[i].time_sec);
+#ifdef HISTORY_CALLER
+	printf("%f, %f, %f, %s\n", (float) time_sec,
+	       elapse,  dhist_swap32(hdata[i].size), hdata[i].funcname);
+#else
 	printf("%f, %f, %f\n", (float) time_sec,
 	       elapse,  dhist_swap32(hdata[i].size));
+#endif /* HISTORY_CALLER */
 	time_sec += elapse;
     }
 }
