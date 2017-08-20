@@ -1,0 +1,27 @@
+# start = 0.000477 count=37448
+# start = 0.005868 count=374480
+
+$ cd darshan-runtime
+$ ./configure --prefix=/home/ishikawa/darshan/ \
+   --with-mem-align=8 \
+  --with-log-path=./darshan --with-jobid-env=PBS_JOBID \
+  CC=mpicc CFLAGS="-Wall -O2 -g -DHISTORY -DHISTORY_CALLER"
+$ cd darshan-util
+$ ./configure CC=cc CFLAGS="-DHISTORY -DHISTORY_CALLER"
+$ make
+$ make install
+
+
+$ mkdir /home/ishikawa/darshan/
+$ ./configure --prefix=/home/ishikawa/darshan/ \
+  --with-mem-align=8 \
+  --with-log-path=./darshan --with-jobid-env=PBS_JOBID \
+  CC=mpicc CFLAGS="-Wall -O2 -g -DHISTORY -DHISTORY_CALLER"
+$ make
+$ make install
+
+$ cd $(TOP)/darshan-2.3.0/darshan-util
+$ ./configure --prefix=/home/ishikawa/ CC=cc CFLAGS=-DHISTORY
+$ make
+$ make install
+

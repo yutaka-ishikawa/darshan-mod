@@ -1,3 +1,8 @@
+#
+# In myrun3 and myrun4, the large_hist example is used.
+# The program opens "./null" file which should be symbolically linked
+# to /dev/null.
+#
 #MPICC   =       mpifccpx
 #CFLAGS  = -DFJ_MPI -O3 -Xg
 MPICC = mpicc
@@ -6,7 +11,7 @@ CC = cc
 #CFLAGS  = -O2 -Wall  ## backtrace does not work properly
 CFLAGS  = -O -Wall
 
-all: simple simple2 simple3 ccode write_test stream
+all: simple simple2 simple3 ccode write_test stream large_hist
 simple: simple.c
 	$(MPICC) $(CFLAGS) -o simple simple.c
 simple2: simple2.c
@@ -14,13 +19,16 @@ simple2: simple2.c
 simple3: simple3.c
 	$(MPICC) $(CFLAGS) -o simple3 simple3.c
 ccode: ccode.c ccode-func.o
-	$(CC) $(CFLAGS) -g -o ccode ccode.c ccode-func.o -rdynamic
+#	$(CC) $(CFLAGS) -g -o ccode ccode.c ccode-func.o -rdynamic
+	$(CC) $(CFLAGS) -g -o ccode ccode.c ccode-func.o
 ccode-func.o:  ccode-func.c
 	$(CC) $(CFLAGS) -g -c $^
 write_test: write_test.c
 	$(CC) $(CFLAGS) -g -o write_test write_test.c  -rdynamic
 stream: stream.c
 	$(CC) $(CFLAGS) -o stream stream.c
+large_hist: large_hist.c
+	$(CC) $(CFLAGS) -o large_hist large_hist.c -rdynamic
 libcopy:
 	cp -p ../darshan-2.3.0/darshan-runtime/lib/libdarshan.so .
 	cp -p ../darshan-2.3.0/darshan-runtime/lib/libdarshan-single.so .
@@ -44,6 +52,14 @@ myrun2:
 	export LD_PRELOAD=./libdarshan.so; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=10485760; mpirun -np 2 ./simple2 wdata
 	export LD_PRELOAD=./libdarshan.so; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=10485760; mpirun -np 2 ./simple3 wdata
 
+myrun3:
+	rm -f  darshanlog-*
+	[ -L ./null ] || ln -s /dev/null .
+	(export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=104857600; ./large_hist 1000000)
+myrun4:
+	rm -f  darshanlog-*
+	[ -L ./null ] || ln -s /dev/null .
+	(export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=1048576000; ./large_hist 10000000)
 myrunc:
 	(export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; ./ccode a1 a2 a3 a4)
 #	(export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_FUNCALL_LEVEL=2; export DARSHAN_HISTORY_RW="rw"; ./ccode a1 a2 a3 a4)
