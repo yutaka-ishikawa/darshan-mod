@@ -123,6 +123,8 @@ static int darshan_mem_alignment = 1;
 #ifdef HISTORY
 static void darshan_history_read(int, ssize_t, double, double);
 static void darshan_history_write(int, ssize_t, double, double);
+extern void darshan_single_last_int_msg(char *where, unsigned long val);
+extern void darshan_single_last_string_msg(char *where, char *msg);
 #ifdef DARSHAN_SINGLE
 extern void darshan_single_init();
 #endif /* DARSHAN_SINGLE */
@@ -2313,6 +2315,11 @@ static struct darshan_aio_tracker* darshan_aio_tracker_del(int fd, void *aiocbp)
     return(tmp);
 }
 
+DARSHAN_FORWARD_DECL(fprintf, int, (FILE *stream, const char *fmt, ...));
+DARSHAN_FORWARD_DECL(printf, int, (const char *fmt, ...));
+DARSHAN_FORWARD_DECL(__fprintf_chk, int, (FILE *stream, int flag, const char *fmt, ...));
+DARSHAN_FORWARD_DECL(__printf_chk, int, (int flag, const char *fmt, ...));
+
 #ifdef HISTORY
 #ifdef WORDS_BIGENDIAN
 #define swap32(fd) (fd)
@@ -2347,7 +2354,7 @@ static void darshan_history_rw(struct history *hist, ssize_t size,
 	if (max_histent <= 0) max_histent = HIST_SIZE;
 #ifdef HISTORY_DEBUG
 	/* default size = 1 entries * 87380 */
-	printf("Darshan History entries = %ld (* %ld) \n", max_histent, HIST_SIZE);
+	__real_printf("Darshan History entries = %ld (* %ld) \n", max_histent, HIST_SIZE);
 #endif /* HISTORY_DEBUG */
     }
     if (hist->hist_total >= max_histent) return;
@@ -2356,7 +2363,7 @@ static void darshan_history_rw(struct history *hist, ssize_t size,
 	if (hist->hist_start == 0) {
 	    /* The first time of operation */
 #ifdef HISTORY_DEBUG
-	    printf("<%d> start time = %f %f\n", my_rank, tm1, MPI_Wtime());
+	    __real_printf("<%d> start time = %f %f\n", my_rank, tm1, darshan_wtime());
 #endif /* HISTORY_DEBUG */
 	    hist->hist_start = hist->hist_last = tm1;
 	}
@@ -2388,8 +2395,8 @@ static void darshan_history_rw(struct history *hist, ssize_t size,
     hist->hist_total++;
     hist->hist_last = tm2;
 #ifdef HISTORY_DEBUG
-    printf("<%d> %s start(%f) elapsed(%f) KB(%f) size(%ld)\n",
-	   my_rank, file->log_file->name_suffix, cur, elapsed, kb, size);
+    __real_printf("<%d> start(%f) elapsed(%f) KB(%f) size(%ld)\n",
+		  my_rank, cur, elapsed, kb, size);
 #endif /* HISTORY_DEBUG */
 }
 
@@ -2468,11 +2475,6 @@ static void darshan_history_write(int fd, ssize_t size, double tm1, double tm2)
 }
 #endif /* 0 */
 
-DARSHAN_FORWARD_DECL(fprintf, int, (FILE *stream, const char *fmt, ...));
-DARSHAN_FORWARD_DECL(printf, int, (const char *fmt, ...));
-DARSHAN_FORWARD_DECL(__fprintf_chk, int, (FILE *stream, int flag, const char *fmt, ...));
-DARSHAN_FORWARD_DECL(__printf_chk, int, (int flag, const char *fmt, ...));
-
 #ifdef DARSHAN_SINGLE
 #define CHECK_DARSHAN_INIT()				\
 {							\
@@ -2535,12 +2537,11 @@ int DARSHAN_DECL(printf)(const char *fmt, ...)
     int		ret, fd;
     double	tm1, tm2;
 
-
     CHECK_DARSHAN_INIT();
     MAP_OR_FAIL(printf);
 
 #ifdef HISTORY_DEBUG
-    __real_printf("darshan-printf: %s\n", fmt);
+//    ret = __real_printf("darshan-printf: %s\n", fmt);
 #endif /* HISTORY_DEBUG */
     va_start(ap, fmt);
     tm1 = darshan_wtime();
@@ -2563,10 +2564,10 @@ int DARSHAN_DECL(__printf_chk)(int flag, const char *fmt, ...)
 
 
     CHECK_DARSHAN_INIT();
-    MAP_OR_FAIL(printf);
+    MAP_OR_FAIL(__printf_chk);
 
 #ifdef HISTORY_DEBUG
-    __real_printf("darshan-__printf_chk: %s\n", fmt);
+//    __real_printf("darshan-__printf_chk: %s\n", fmt);
 #endif /* HISTORY_DEBUG */
     va_start(ap, fmt);
     tm1 = darshan_wtime();
@@ -2585,6 +2586,7 @@ void
 darshan_history_stdio_init()
 {
     double	tm1;
+
     tm1 = darshan_wtime();
     CP_RECORD_OPEN(0, "<stdin>", 0, 0, tm1, tm1);
     CP_RECORD_OPEN(1, "<stdout>", 0, 0, tm1, tm1);
@@ -2593,11 +2595,11 @@ darshan_history_stdio_init()
     {
 	struct darshan_file_runtime* file;
 	file = darshan_file_by_fd(0);
-	printf("0 -> %p\n", file);
+	printf("darshan_history_stdio_init: 0 -> %p\n", file);
 	file = darshan_file_by_fd(1);
-	printf("1 -> %p\n", file);
+	printf("darshan_history_stdio_init: 1 -> %p\n", file);
 	file = darshan_file_by_fd(2);
-	printf("2 -> %p\n", file);
+	printf("darshan_history_stdio_init: 2 -> %p\n", file);
     }
 #endif /* HISTORY_DEBUG */
 }

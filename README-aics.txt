@@ -1,5 +1,5 @@
 Extended Darshan (Based on 2.3.0 release)
-					      May 29, 2017
+					      August 20, 2017
 					      System Software Research Team
 					      System Software Development Team
 					       			    RIKEN AICS
@@ -114,18 +114,35 @@ Environment Variables extended by RIKENN AICS
     export DARSHAN_HISTORY_MEMSIZE=10485760	# 10MB
     export DARSHAN_HISTORY_MEMSIZE=104857600	# 100MB
 
+- DARSHAN_HISTORY_FUNCALL_LEVEL
+	Spefifies which level from the top of the calling stack is selected
+	to record a function symbol. The dafult is 4.
+- DARSHAN_WORK_MEMSIZE
+	Speficies working memory area for compression. The user might not
+	specify this option unless the compress ration is below 3/4.
+
 Note:
   - The last 15 bytes of a file name is only saved. This is a darshan feature.
 
 -------------------------------------------------------------------------------
 HISTORY:
+08/20/2017
+-  The original darshan manages a fix amount of memory for working
+   memory to compress a log.  The modified version dynamically reserves
+   this working memory area, e.g., 3/4's logged data size.
+   The users also specifies this amount of memory by setting the
+   "DARSHAN_WORK_MEMSIZE" environment variable.
 05/29/2017
- - The "-DHISTORY_CALLER" option is added.
+ - The "-DHISTORY_CALLER" compile option is added.
    At logging read/write system call, its caller name is logged.
    The runtime libraries and tools must be compiled with
    "-DHISTORY_CALLER" option.
    Applications should be compiled with the "-g" option
    without "-O2" nor "-O3" option, and linked with the "-rdynamic" option.
+   The "DARSHAN_HISTORY_FUNCALL_LEVEL" environment is introduced to select
+   which symbol of function from the calling stack is recorded.
+   The default is 4, showing the symbol in the 4th from the top of the calling
+   stack.
 05/21/2017
  - a bug fix reported by AXE is merged
  - the following bug is fixed

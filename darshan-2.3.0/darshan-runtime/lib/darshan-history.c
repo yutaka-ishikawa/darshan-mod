@@ -128,7 +128,7 @@ darshan_history_construct_indices(struct darshan_job_runtime* final_job,
     if(final_job->file_count == 0) return;
     nfiles = 0; nent = 0; total_ent = 0;
 #ifdef HISTORY_DEBUG
-    printf("<%d> final_job->file_count(%d)\n", rank, final_job->file_count);
+    printf("<%d> darhsan_history_construct_indcies: final_job->file_count(%d)\n", rank, final_job->file_count);
     for (i = 0; i < CP_MAX_FILES; i++) {
 	int j;
 	for (j = 0; j < final_job->file_count; j++) {

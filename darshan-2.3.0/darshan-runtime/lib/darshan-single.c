@@ -67,10 +67,10 @@ darshan_single_last_string_msg(char *where, char *msg)
 }
 
 void
-darshan_single_last_int_msg(char *where, int val)
+darshan_single_last_int_msg(char *where, unsigned long val)
 {
     char buf[256];
-    sprintf(buf, "echo \"%s %d\" >>/tmp/dlog", where, val);
+    sprintf(buf, "echo \"%s 0x%x %d\" >>/tmp/dlog", where, val, val);
     system(buf);
 }
 #endif /* HISTORY_DEBUG */
@@ -260,7 +260,7 @@ darhsan_single_exit()
 	index_count++;
     }
 #ifdef HISTORY_DEBUG
-    printf("final_job->file_count = %d\n", final_job->file_count);
+    printf("dashan_single_exit: final_job->file_count = %d\n", final_job->file_count);
 #endif /* HISTORY_DEBUG */
     /* 
      * Iterates through counters and adjusts timestamps to be relative to
@@ -282,6 +282,7 @@ darhsan_single_exit()
 #endif /* HISTORY_DEBUG */
     ret = cp_log_compress(final_job, 0, &index_count, lengths, pointers);
     if (ret != 0) {
+	fprintf(stderr, "Cannot compress\n");
 	/* error return */
     }
 
@@ -321,24 +322,24 @@ err_ret:
 static int cp_log_compress(struct darshan_job_runtime* final_job,
     int rank, int* inout_count, int* lengths, void** pointers)
 {
-    int ret = 0;
-    z_stream tmp_stream;
-    int total_target = 0;
-    int i;
-    int no_data_flag = 1;
+    int		ret = 0;
+    z_stream	tmp_stream;
+    int		total_target = 0;
+    int		i;
+    int		no_data_flag = 1;
+    int		len;
+    char	*sp;
+    void	*compbuf;
 
     /* do we actually have anything to write? */
-    for(i=0; i<*inout_count; i++)
-    {
-        if(lengths[i])
-        {
+    for (i = 0; i < *inout_count; i++) {
+        if (lengths[i]) {
             no_data_flag = 0;
             break;
         }
     }
 
-    if(no_data_flag)
-    {
+    if(no_data_flag) {
         /* nothing to compress */
         *inout_count = 0;
         return(0);
@@ -351,13 +352,34 @@ static int cp_log_compress(struct darshan_job_runtime* final_job,
 
     ret = deflateInit2(&tmp_stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED,
         31, 8, Z_DEFAULT_STRATEGY);
-    if(ret != Z_OK)
-    {
+    if(ret != Z_OK) {
         return(-1);
     }
 
-    tmp_stream.next_out = (void*)final_job->comp_buf;
-    tmp_stream.avail_out = CP_COMP_BUF_SIZE;
+#define CP_REQSIZE(sz) (((sz)*3)/4)
+    sp = getenv("DARSHAN_WORK_MEMSIZE");
+    if (sp && ((len = atol(sp)) > CP_COMP_BUF_SIZE)) {
+	/* nothing */
+    } else {
+	len = 0;
+	for (i = 0; i < *inout_count; i++) {
+	    len += lengths[i];
+	}
+    }
+    if (CP_REQSIZE(len) > CP_COMP_BUF_SIZE) {
+	tmp_stream.next_out = (void*) malloc(CP_REQSIZE(len));
+	if (tmp_stream.next_out == 0) goto usestatic;
+	tmp_stream.avail_out = CP_REQSIZE(len);
+    } else {
+    usestatic:
+        tmp_stream.next_out = (void*)final_job->comp_buf;
+	tmp_stream.avail_out = CP_COMP_BUF_SIZE;
+    }
+    compbuf = tmp_stream.next_out;
+
+#ifdef HISTORY_DEBUG2
+    printf("cp_log_compress: len = %f Kibyte (CP_COMP_BUF_SIZE=%f Kibyte)\n", (float)len/1024.0, (float)CP_COMP_BUF_SIZE/1024.0);
+#endif
 
     /* loop through all pointers to be compressed */
     for(i=0; i<*inout_count; i++)
@@ -401,7 +423,7 @@ static int cp_log_compress(struct darshan_job_runtime* final_job,
     deflateEnd(&tmp_stream);
 
     /* substitute our new buffer */
-    pointers[0] = final_job->comp_buf;
+    pointers[0] = compbuf;
     lengths[0] = tmp_stream.total_out;
     *inout_count = 1;
 
