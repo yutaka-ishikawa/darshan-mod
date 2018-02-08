@@ -46,6 +46,7 @@ my $plot_data = "\"file-access-rank_read.dat\" using 1:2 with lines lw 1 lt 1 ti
 my $plot_caption = "Timespan for read/write access on files";
 my $plot_ytics = "";
 my $print_summary = 0;
+my $plot_term = "png";
 
 process_args();
 
@@ -170,7 +171,7 @@ make_conf();
 chdir $tmp_dir;
 system "$gnuplot rank.conf";
 chdir $orig_dir;
-system "$mv $tmp_dir/history_rank.png $output_file";
+system "$mv $tmp_dir/history_rank.$plot_term $output_file";
 ###system "cp $tmp_dir/*.dat .";
 
 exit 0;
@@ -196,9 +197,9 @@ if(abs($plot_to - $plot_from) < 5)
 
     open(RANKCONF, ">$tmp_dir/rank.conf") || die("error tmp file: $!\n");
     print RANKCONF "#!/usr/bin/gnuplot -persist
-set terminal png
-set terminal png size $width, $hight
-set output \"history_rank.png\"
+set terminal $plot_term
+set terminal $plot_term size $width, $hight
+set output \"history_rank.$plot_term\"
 set ylabel \"rank\"
 set xlabel \"seconds\"
 set timefmt \"%s\"
@@ -215,7 +216,7 @@ plot $plot_data
 
 sub process_args
 {
-    use vars qw( $opt_help $opt_output $opt_verbose $opt_from_rank $opt_to_rank $opt_start_time $opt_end_time $opt_caption $opt_nocaption $opt_summary);
+    use vars qw( $opt_help $opt_output $opt_verbose $opt_from_rank $opt_to_rank $opt_start_time $opt_end_time $opt_caption $opt_nocaption $opt_summary $opt_terminal);
 
     Getopt::Long::Configure("no_ignore_case", "bundling");
     GetOptions( "help",
@@ -230,7 +231,8 @@ sub process_args
 		"plot=s",
 		"caption=s",
 		"nocaption",
-		"summary"
+		"summary",
+		"terminal=s"
 	);
 
     if($opt_help)
@@ -267,6 +269,15 @@ sub process_args
     if($opt_summary)
     {
 	$print_summary = 1;
+    }
+
+    if($opt_terminal)
+    {
+	$plot_term = $opt_terminal;
+	$output_file = "history_rank.$opt_terminal";
+	if ($opt_terminal =~ "pdf") {
+	    $width = "10cm"; $hight = "10cm";
+	}
     }
 
     if($opt_verbose)
@@ -452,6 +463,7 @@ Usage: $PROGRAM_NAME <options> input_file
     --output <output_file>       Specifies a file to write png output to
                                  (defaults to ./history_rank.png)
     --summary                    print summary in the csv format
+    --terminal <terminal type>	 set terminal type for gnuplot. png is default.
     --verbose                    Prints and retains tmpdir used for output
 
 Purpose:

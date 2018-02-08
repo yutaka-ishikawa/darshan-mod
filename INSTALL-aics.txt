@@ -1,5 +1,5 @@
 Extended Darshan (Based on 2.3.0 release)
-					      Feburary 07, 2018
+					      Feburary 08, 2018
 					      System Software Research Team
 					      System Software Development Team
 					       			    RIKEN AICS
@@ -7,7 +7,7 @@ Extended Darshan (Based on 2.3.0 release)
 In case of Linux-Xeon
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 $ cd $TOP/darshan-2.3.0/darshan-runtime
-$ ./configure --prefix=$TOP/darshan/
+$ ./configure --prefix=$TOP/darshan/ \
    --with-mem-align=8 \
   --with-log-path=./darshan --with-jobid-env=PBS_JOBID \
   CC=mpicc CFLAGS="-Wall -O2 -g -DHISTORY -DHISTORY_CALLER"
@@ -26,13 +26,15 @@ The "-DHISTORY_CALLER" option enables that function names calling
 read/write system call are logged.
 %-----------------------------------------------------------------------
 /* testing */
-$ PATH=$PATH:$TOP/darshan/bin
+$ PATH=$TOP/darshan/bin:$PATH
 $ mkdir tmp
 $ cd tmp
-$ (export LD_PRELOAD=¡ðTOP/lib/libdarshan-single.so; cp /bin/ls /tmp/)
+$ (export LD_PRELOAD=$TOP/darshan/lib/libdarshan-single.so; cp /bin/ls /tmp/)
 or
-$ (export LD_PRELOAD=$TOP/lib/libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=104857600; cp libdarshan-single.so /tmp/ )
+$ (export LD_PRELOAD=$TOP/darshan/lib/libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=104857600; cp libdarshan-single.so /tmp/ )
 $ darshan-fileio.pl <log file>
+
+$ (export LD_PRELOAD=$TOP/darshan/lib/libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; cp /bin/ls /tmp/)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 In case of K
@@ -60,9 +62,10 @@ $ make
 About Extension
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The following two ifdef constants are introduced for AICS extensions.
+-DHISTORY_CALLER
+ To enable recording caller names of read/write system call.
 -DHISTORY
  To enable recording file I/O operation history and file size at close.
-
 -DK_SUPERCOMPUTER
  A feature, not working in K computer, is commented out at this
  moment.  We have not yet investigated the reason, but it seems that
