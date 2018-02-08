@@ -181,6 +181,9 @@ darshan_history_construct_indices(struct darshan_job_runtime* final_job,
 	dhfp[nfiles].hfile_nfopen
 		= htonl(CP_VALUE(&final_job->file_runtime_array[i],
 				 CP_POSIX_FOPENS));
+	/* file size at close time */
+	dhfp[nfiles].hfile_size
+		= htonl(final_job->file_runtime_array[i].fsize);
 #ifdef HISTORY_DEBUG
 	printf(" i(%d) open(%f) close(%f)\n", i,
 	       swap64(dhfp[nfiles].hfile_open),

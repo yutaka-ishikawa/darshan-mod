@@ -21,14 +21,14 @@ main()
     for (i = 0; i < 4; i++) {
 	fd = func1(fname);
 	wsz = 1024;
-//	for (j = 0; j < 10; j++) {
+	for (j = 0; j < 10; j++) {
 	    totw = func2(fd, buf, wsz);
 	    if (wsz < 0) {
 		printf("Cannot write data after writing %ld MB\n", totw);
 	    }
-//	    usleep(10000);
-//	}
-//	sleep(1);
+	    usleep(10000);
+	}
+	sleep(1);
 	close(fd);
     }
     return 0;

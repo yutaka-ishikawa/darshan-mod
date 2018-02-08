@@ -1,5 +1,3 @@
-# start = 0.000477 count=37448
-# start = 0.005868 count=374480
 
 $ cd darshan-runtime
 $ ./configure --prefix=/home/ishikawa/darshan/ \
@@ -21,7 +19,10 @@ $ make
 $ make install
 
 $ cd $(TOP)/darshan-2.3.0/darshan-util
-$ ./configure --prefix=/home/ishikawa/ CC=cc CFLAGS=-DHISTORY
+$ ./configure --prefix=/home/ishikawa/ CC=cc CFLAGS="-DHISTORY -DHISTORY_CALLER"
 $ make
 $ make install
 
+
+$ darshan-job-summary.pl darshanlog-ubuntu-1503203011-large_hist-5712
+$ darshan-history.pl --summary xxxxx.gz

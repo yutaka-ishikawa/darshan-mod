@@ -1,5 +1,5 @@
 Extended Darshan (Based on 2.3.0 release)
-					      August 20, 2017
+					      Feburary 07, 2018
 					      System Software Research Team
 					      System Software Development Team
 					       			    RIKEN AICS
@@ -61,7 +61,7 @@ About Extension
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The following two ifdef constants are introduced for AICS extensions.
 -DHISTORY
- To enable recording file I/O operation history
+ To enable recording file I/O operation history and file size at close.
 
 -DK_SUPERCOMPUTER
  A feature, not working in K computer, is commented out at this

@@ -1465,6 +1465,7 @@ static int getfile_internal_204h(darshan_fd fd, struct darshan_job *job,
 	darshan_hutil[i].hutil_rstart = darshan_hfile[i].hfile_rstart;
 	darshan_hutil[i].hutil_wstart = darshan_hfile[i].hfile_wstart;
 	/* */
+	darshan_hutil[i].hutil_size = ntohl(darshan_hfile[i].hfile_size);
 	darshan_hutil[i].hutil_nopen = ntohl(darshan_hfile[i].hfile_nopen);
 	darshan_hutil[i].hutil_nfopen = ntohl(darshan_hfile[i].hfile_nfopen);
 	szr = ntohl(darshan_hfile[i].hfile_read);

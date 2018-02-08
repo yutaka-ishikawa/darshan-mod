@@ -1,3 +1,10 @@
+MPIアプリ
+　　cp_log_construct_indicesにおいてヒストリデータを追加
+	darshan_history_construct_indices(final_job,rank,
+			      inout_count, lengths, pointers);
+シングルアプリ
+　　直接　darshan_history_construct_indices呼び出す。
+
 ーーーーーーーーーーーーーーーーーーーーーーーーーーー
 struct darshan_file * CP_MAX_FILES
 struct darshan_hfiles

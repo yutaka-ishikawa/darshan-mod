@@ -125,6 +125,7 @@ static void darshan_history_read(int, ssize_t, double, double);
 static void darshan_history_write(int, ssize_t, double, double);
 extern void darshan_single_last_int_msg(char *where, unsigned long val);
 extern void darshan_single_last_string_msg(char *where, char *msg);
+extern void mybt_msg(char *fmt, ...);
 #ifdef DARSHAN_SINGLE
 extern void darshan_single_init();
 #endif /* DARSHAN_SINGLE */
@@ -356,9 +357,14 @@ int DARSHAN_DECL(close)(int fd)
     int tmp_fd = fd;
     double tm1, tm2;
     int ret;
+#ifdef HISTORY
+    struct stat	sbuf;
+#endif /* HISTORY */
 
     MAP_OR_FAIL(close);
-
+#ifdef HISTORY
+    fstat(fd, &sbuf);
+#endif /* HISTORY */
     tm1 = darshan_wtime();
     ret = __real_close(fd);
     tm2 = darshan_wtime();
@@ -372,6 +378,9 @@ int DARSHAN_DECL(close)(int fd)
         CP_F_SET(file, CP_F_CLOSE_TIMESTAMP, posix_wtime());
         CP_F_INC_NO_OVERLAP(file, tm1, tm2, file->last_posix_meta_end, CP_F_POSIX_META_TIME);
         darshan_file_close_fd(tmp_fd);
+#ifdef HISTORY
+	file->fsize = (int64_t) sbuf.st_size;
+#endif /* HISTORY */
     }
     CP_UNLOCK();
 
@@ -2423,6 +2432,8 @@ static void darshan_history_write(int fd, ssize_t size, double tm1, double tm2)
     darshan_history_rw(&file->hist_w, size, tm1, tm2);
     return;
 }
+
+
 #if 0
 static void darshan_history_write(int fd, ssize_t size, double tm1, double tm2)
 {
@@ -2567,7 +2578,7 @@ int DARSHAN_DECL(__printf_chk)(int flag, const char *fmt, ...)
     MAP_OR_FAIL(__printf_chk);
 
 #ifdef HISTORY_DEBUG
-//    __real_printf("darshan-__printf_chk: %s\n", fmt);
+    __real_printf("darshan-__printf_chk: %s\n", fmt);
 #endif /* HISTORY_DEBUG */
     va_start(ap, fmt);
     tm1 = darshan_wtime();
@@ -2588,9 +2599,9 @@ darshan_history_stdio_init()
     double	tm1;
 
     tm1 = darshan_wtime();
-    CP_RECORD_OPEN(0, "<stdin>", 0, 0, tm1, tm1);
-    CP_RECORD_OPEN(1, "<stdout>", 0, 0, tm1, tm1);
-    CP_RECORD_OPEN(2, "<stderr>", 0, 0, tm1, tm1);
+    CP_RECORD_OPEN(0, "<stdin>", 0, 1, tm1, tm1);
+    CP_RECORD_OPEN(1, "<stdout>", 0, 1, tm1, tm1);
+    CP_RECORD_OPEN(2, "<stderr>", 0, 1, tm1, tm1);
 #ifdef HISTORY_DEBUG
     {
 	struct darshan_file_runtime* file;
@@ -2609,12 +2620,16 @@ darshan_history_stdio_exit()
     struct darshan_file_runtime* file;
     double	tm1;
     int		fd;
+    struct stat	sbuf;
 
     tm1 = darshan_wtime();
     for (fd = 0; fd < 3; fd++) {
-	file = darshan_file_by_fd(0);
+	file = darshan_file_by_fd(fd);
 	if (file) {
 	    CP_F_SET(file, CP_F_CLOSE_TIMESTAMP, tm1);
+	    if (fstat(fd, &sbuf) == 0) { /* actual file size */
+		file->fsize = (int64_t) sbuf.st_size;
+	    }
 	}
     }
 }
@@ -2644,7 +2659,7 @@ mybt_init()
 
 static char	fmtbuf[256], cmdbuf[256];
 
-static void
+void
 mybt_msg(char *fmt, ...)
 {
     va_list	ap;

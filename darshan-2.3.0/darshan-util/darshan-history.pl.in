@@ -72,13 +72,14 @@ my $current_rank = 0;
 my $current_vec = "";
 my $current_file = "";
 my $io_sum = 0;
+my $f_size = 0;
 my $open_time = 0;
 my $close_time = 0;
 my $notfirst = 0;
 my $is_stream = 0;
 
 if ($print_summary) {
-    print "#rank,filename,\"read|write\",size,\"stream|fd\",open,close,start\n";
+    print "#rank,filename,\"read|write\",iosize,filesize,\"stream|fd\",open,close,start\n";
 }
 while ($line = <TRACE>) {
     chomp($line);
@@ -97,6 +98,8 @@ while ($line = <TRACE>) {
 	} elsif ($line =~ /^# start = ([\d\.]+)/) {
 #YI	    $diff_since_first_io = $1 - $minimum_start_time;
 	    $diff_since_first_io = $1;
+	} elsif ($line =~ /^# size = ([\d\.]+)/) {
+	    $f_size = $1;
 	} elsif ($line =~ /^# <([0-9]+)>/) {
 	    if ($notfirst == 1) {
 		print_iosummary();
@@ -125,7 +128,7 @@ while ($line = <TRACE>) {
     else{
 	# time, elapsed, Kbyte
 #	($start_time, $elapsed, $io_size) = (split(/[\t ]+/, $line))[0..2];
-	($start_time, $elapsed, $io_size) = (split(/[\t ]+/, $line))[0..2];
+	($start_time, $elapsed, $io_size) = (split(/,/, $line))[0..2];
 	$io_sum += $io_size;
 	chop($start_time);
 	chop($elapsed);
@@ -180,7 +183,7 @@ sub print_iosummary
     } else {
 	$otype = "fd";
     }
-    print "$current_rank,$current_file,$current_vec,$io_sum,$otype,$open_time,$close_time,$diff_since_first_io\n";
+    print "$current_rank,$current_file,$current_vec,$io_sum,$f_size,$otype,$open_time,$close_time,$diff_since_first_io\n";
 #    print "rank: $current_rank file: $current_file op: $current_vec $io_sum KB, $otype $open_time, $close_time\n";
 }
 
@@ -364,7 +367,7 @@ sub check_prereqs
     }
 
     $output =~ /gnuplot (\d+)\.(\d+)/;
-    if($1 < 4 || $2 < 2)
+    if($1 < 4 || ($1 == 4 && $2 < 2))
     {
         print("error: detected $gnuplot version $1.$2, but darshan-history requires at least 4.2.\n");
         exit(1);

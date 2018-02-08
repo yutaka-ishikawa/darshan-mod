@@ -335,6 +335,7 @@ int main(int argc, char **argv)
 		    printf("%f close %f\n", 
 			   dhist_swap64(dhup->hutil_open),
 			   dhist_swap64(dhup->hutil_close));
+		    printf("# size = %ld\n", dhup->hutil_size);
 		    print_history(dhup->hutil_read, dhup->hutil_rdata,
 				  dhup->hutil_rstart);
 		}
@@ -350,6 +351,7 @@ int main(int argc, char **argv)
 		    printf("%f close %f\n", 
 			   dhist_swap64(dhup->hutil_open),
 			   dhist_swap64(dhup->hutil_close));
+		    printf("# size = %ld\n", dhup->hutil_size);
 		    print_history(dhup->hutil_write, dhup->hutil_wdata,
 				  dhup->hutil_wstart);
 		}

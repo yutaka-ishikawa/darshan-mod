@@ -104,6 +104,7 @@ struct darshan_file_runtime
 #ifdef HISTORY
     struct history hist_w;
     struct history hist_r;
+    int64_t fsize;
 #endif /* HISTORY */
 };
 
