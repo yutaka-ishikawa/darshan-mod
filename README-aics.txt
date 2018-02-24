@@ -1,5 +1,5 @@
 Extended Darshan (Based on 2.3.0 release)
-					      Feburary 08, 2018
+					      Feburary 24, 2018
 					      System Software Research Team
 					      System Software Development Team
 					       			    RIKEN AICS
@@ -25,6 +25,7 @@ You will see a file something like
 Execute the darshan-parser utility as follows:
 $ darshan-parser --history a03228_simple_id29390_2-24-29839-4689494154855117309_1.darshan.gz
 You will see the log of read/write operations issued by the simple.c program.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  How to Use Darshan for MPI applications
@@ -82,10 +83,6 @@ The format of log file name is
     darshanlog-<user name>-<command name>-<pid>.gz
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
- How to record 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  How to see the log
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 1) darshan-job-summary.pl is used to look an overall log.
@@ -105,9 +102,29 @@ The format of log file name is
     $ darshan-fileio.pl <log file>
 
 4) The darshan-parser, used by the above tools, is a basic utility to
-   extract recorded information. You may directory use this tool.
+   extract recorded information. You may directly use this tool.
     $ darshan-parser --history <log file>
 
+   If the execution of the following sample program hass been recorded:
+	fp = fopen("file.txt, "w+"); fwrite(data, 1024, 10, fp);  fclose(fp);
+	fp = fopen("file.txt, "w+"); fwrite(data, 1024, 100, fp); fclose(fp);
+	fp = fopen("file.txt, "w+"); fwrite(data, 1024, 1, fp);   fclose(fp);
+   The darshan-parser writes the following report:
+     ....
+     # <0> write xample/file.txt ntimes 3 fopen 0.000103 close 0.000745
+     # size = 102400
+     # start = 0.000105 count=3
+     # time, elapsed, Kbyte, func name
+     0.000000, 0.000027, 10.240000, try+0x35
+     0.000438, 0.000101, 102.400002, try+0x35
+     0.000605, 0.000001, 1.024000, try+0x35
+     ....
+   Though the sample program accesses the same file three times, i.e.,
+   the file is opened three times, the darshan just records elapsed times
+   of open and close of the last access.
+   The maximum size of this file is reported, not the sizeof the last
+   access.  That is, the size is 102400 byte, not 1024 byte.  The all
+   write/read operations are recorded.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Additional Information
@@ -140,12 +157,17 @@ Note:
 
 -------------------------------------------------------------------------------
 HISTORY:
-02/08/2017
+02/24/2018
+-  The following bugs are fixed:
+	- Though the file size field is 64 bit, htonl and ntohl were
+	  used for byte order conversion.
+	- The fclose operation was not taken care for recording file size.
+02/08/2018
 -  The actual file size at the close time is now recorded. Darshan accumulates
-   bytes of read/write data. If an application move the file position by
-   the lseek system call, and reads/writes data. The bytes of read/write data
-   is not the same of the file size. You can get this information using
-   darshan-history.pl:
+   bytes of read/write data. If an application moves the file position by
+   the lseek system call followed by reading/writing data. The bytes of
+   read/write data is not the same of the file size. You can get this
+   information using darshan-history.pl:
 	$ darshan-history.pl --summary  darshanlog-XXXXX.gz
 -  The darshan-history.pl now generates pdf and other formats supported
    by gnuplot. The "--terminal" option changes the format.
@@ -153,9 +175,9 @@ HISTORY:
    pdf is 10cm x 10cm.
 -  The following problems are fixed.
       - darshan-job-summary.pl assumed version 4.2 or later version of 4,
-        not version 5 or later.
+        not version 5 nor later.
       - darhsn-history.pl could not handle the latest log format.
-      - The closing time of stdout/stderr was not set.
+      - The closing time of stdout/stderr was not recorded.
 08/20/2017
 -  The original darshan manages a fix amount of memory for working
    memory to compress a log.  The modified version dynamically reserves

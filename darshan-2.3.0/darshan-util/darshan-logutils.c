@@ -258,6 +258,7 @@ static const char* darshan_log_error(darshan_fd fd, int* errnum);
 #ifdef WORDS_BIGENDIAN
 #define dhist_swap32(fd) (fd)
 #define dhist_swap64(dd) (dd)
+#define iswap64(id) (id)
 #else
 /* little endian */
 float dhist_swap32(float fd)
@@ -296,6 +297,12 @@ unsigned long long d2ull(double dd)
     } uu;
     uu.dd = dd;
     return uu.ud;
+}
+static uint64_t iswap64(uint64_t x) {
+    x = (x & 0x00000000ffffffff) << 32 | (x & 0xffffffff00000000) >> 32;
+    x = (x & 0x0000ffff0000ffff) << 16 | (x & 0xffff0000ffff0000) >> 16;
+    x = (x & 0x00ff00ff00ff00ff) << 8  | (x & 0xff00ff00ff00ff00) >> 8;
+    return x;
 }
 #endif /* WORDS_BIGENDIAN */
 #endif /* HISTORY */
@@ -1465,7 +1472,7 @@ static int getfile_internal_204h(darshan_fd fd, struct darshan_job *job,
 	darshan_hutil[i].hutil_rstart = darshan_hfile[i].hfile_rstart;
 	darshan_hutil[i].hutil_wstart = darshan_hfile[i].hfile_wstart;
 	/* */
-	darshan_hutil[i].hutil_size = ntohl(darshan_hfile[i].hfile_size);
+	darshan_hutil[i].hutil_size = iswap64(darshan_hfile[i].hfile_size);
 	darshan_hutil[i].hutil_nopen = ntohl(darshan_hfile[i].hfile_nopen);
 	darshan_hutil[i].hutil_nfopen = ntohl(darshan_hfile[i].hfile_nfopen);
 	szr = ntohl(darshan_hfile[i].hfile_read);

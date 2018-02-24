@@ -121,6 +121,7 @@ static struct stat64 cp_stat_buf;
 static int darshan_mem_alignment = 1;
 
 #ifdef HISTORY
+#define HIST_MAX(a, b)	((a) > (b) ? (a) : (b))
 static void darshan_history_read(int, ssize_t, double, double);
 static void darshan_history_write(int, ssize_t, double, double);
 extern void darshan_single_last_int_msg(char *where, unsigned long val);
@@ -379,7 +380,7 @@ int DARSHAN_DECL(close)(int fd)
         CP_F_INC_NO_OVERLAP(file, tm1, tm2, file->last_posix_meta_end, CP_F_POSIX_META_TIME);
         darshan_file_close_fd(tmp_fd);
 #ifdef HISTORY
-	file->fsize = (int64_t) sbuf.st_size;
+	file->fsize = HIST_MAX(file->fsize, (uint64_t) sbuf.st_size);
 #endif /* HISTORY */
     }
     CP_UNLOCK();
@@ -393,8 +394,15 @@ int DARSHAN_DECL(fclose)(FILE *fp)
     int tmp_fd = fileno(fp);
     double tm1, tm2;
     int ret;
+#ifdef HISTORY
+    struct stat	sbuf;
+#endif /* HISTORY */
 
     MAP_OR_FAIL(fclose);
+#ifdef HISTORY
+    fflush(fp);	/* force writing data to write system call */
+    ret = fstat(tmp_fd, &sbuf);
+#endif /* HISTORY */
 
     tm1 = darshan_wtime();
     ret = __real_fclose(fp);
@@ -409,6 +417,9 @@ int DARSHAN_DECL(fclose)(FILE *fp)
         CP_F_SET(file, CP_F_CLOSE_TIMESTAMP, posix_wtime());
         CP_F_INC_NO_OVERLAP(file, tm1, tm2, file->last_posix_meta_end, CP_F_POSIX_META_TIME);
         darshan_file_close_fd(tmp_fd);
+#ifdef HISTORY
+	file->fsize = HIST_MAX(file->fsize, (uint64_t) sbuf.st_size);
+#endif /* HISTORY */
     }
     CP_UNLOCK();
 
@@ -2628,7 +2639,7 @@ darshan_history_stdio_exit()
 	if (file) {
 	    CP_F_SET(file, CP_F_CLOSE_TIMESTAMP, tm1);
 	    if (fstat(fd, &sbuf) == 0) { /* actual file size */
-		file->fsize = (int64_t) sbuf.st_size;
+		file->fsize = HIST_MAX(file->fsize, (uint64_t) sbuf.st_size);
 	    }
 	}
     }

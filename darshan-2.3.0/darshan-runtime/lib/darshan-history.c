@@ -25,11 +25,12 @@ static void print_history(int rank, int count, struct darshan_history_data *hdat
 #endif /* HISTORY DEBUG */
 
 #ifdef WORDS_BIGENDIAN
-#define swap32(fd) (fd)
-#define swap64(dd) (dd)
+#define fswap32(fd) (fd)
+#define fswap64(dd) (dd)
+#define iswap64(id) (id)
 #else
 /* little endian */
-static float swap32(float fd)
+static float fswap32(float fd)
 {
     union uu {
 	float		fd;
@@ -40,7 +41,7 @@ static float swap32(float fd)
 	  | ((uu.ud >>  8) & 0x0000ff00) | ((uu.ud >> 24) & 0x000000ff);
     return uu.fd;
 }
-static double swap64(double dd)
+static double fswap64(double dd)
 {
     union uu {
 	double		dd;
@@ -56,6 +57,12 @@ static double swap64(double dd)
 	  | ((uu.ud >> 40) & 0x000000000000ff00)
 	  | ((uu.ud >> 56) & 0x00000000000000ff);
     return uu.dd;
+}
+static uint64_t iswap64(uint64_t x) {
+    x = (x & 0x00000000ffffffff) << 32 | (x & 0xffffffff00000000) >> 32;
+    x = (x & 0x0000ffff0000ffff) << 16 | (x & 0xffff0000ffff0000) >> 16;
+    x = (x & 0x00ff00ff00ff00ff) << 8  | (x & 0xff00ff00ff00ff00) >> 8;
+    return x;
 }
 #endif /* WORDS_BIGENDIAN */
 
@@ -95,7 +102,7 @@ darshan_history_normalize_wtime(double offset, double start)
     double	dt;
     dt = (start > offset) ? (start - offset) : start;
     // printf("start(%f) offset(%f), return(%f)\n", start, offset, dt);
-    return swap64(dt);
+    return fswap64(dt);
 }
 
 #ifdef HISTORY_DEBUG
@@ -105,9 +112,9 @@ static void print_history(int rank, int count, struct darshan_history_data *hdat
     float	timesec = 0.0;
 
     for (i = 0; i < count; i++) {
-	timesec += swap32(hdata[i].diff_sec);
+	timesec += fswap32(hdata[i].diff_sec);
 	printf("<%d> %f, %f, %f\n", rank, timesec,
-	       swap32(hdata[i].time_sec),  swap32(hdata[i].size));
+	       fswap32(hdata[i].time_sec),  fswap32(hdata[i].size));
     }
 }
 #endif /* HISTORY_DEBUG */
@@ -157,11 +164,11 @@ darshan_history_construct_indices(struct darshan_job_runtime* final_job,
 	       final_job->file_array[i].name_suffix);
 	/* open time stamp relative to MPI_Init */
 	dhfp[nfiles].hfile_open
-	    = swap64(CP_F_VALUE(&final_job->file_runtime_array[i],
+	    = fswap64(CP_F_VALUE(&final_job->file_runtime_array[i],
 				CP_F_OPEN_TIMESTAMP));
 	/* close time stamp relative to MPI_Init */
 	dhfp[nfiles].hfile_close
-	    = swap64(CP_F_VALUE(&final_job->file_runtime_array[i],
+	    = fswap64(CP_F_VALUE(&final_job->file_runtime_array[i],
 				CP_F_CLOSE_TIMESTAMP));
 	/* read start time stamp relative to MPI_Init */
 	dhfp[nfiles].hfile_rstart
@@ -183,11 +190,11 @@ darshan_history_construct_indices(struct darshan_job_runtime* final_job,
 				 CP_POSIX_FOPENS));
 	/* file size at close time */
 	dhfp[nfiles].hfile_size
-		= htonl(final_job->file_runtime_array[i].fsize);
+		= iswap64(final_job->file_runtime_array[i].fsize);
 #ifdef HISTORY_DEBUG
 	printf(" i(%d) open(%f) close(%f)\n", i,
-	       swap64(dhfp[nfiles].hfile_open),
-	       swap64(dhfp[nfiles].hfile_close));
+	       fswap64(dhfp[nfiles].hfile_open),
+	       fswap64(dhfp[nfiles].hfile_close));
 #endif /* HISTORY_DEBUG */
 	total_ent += szr + szw;
 	nfiles++;

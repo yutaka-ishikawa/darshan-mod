@@ -11,7 +11,7 @@ CC = cc
 #CFLAGS  = -O2 -Wall  ## backtrace does not work properly
 CFLAGS  = -O -Wall
 
-all: simple simple2 simple3 ccode write_test stream large_hist
+all: simple simple2 simple3 ccode write_test write_test2 stream large_hist
 simple: simple.c
 	$(MPICC) $(CFLAGS) -o simple simple.c
 simple2: simple2.c
@@ -25,6 +25,8 @@ ccode-func.o:  ccode-func.c
 	$(CC) $(CFLAGS) -g -c $^
 write_test: write_test.c
 	$(CC) $(CFLAGS) -g -o write_test write_test.c  -rdynamic
+write_test2: write_test2.c
+	$(CC) $(CFLAGS) -g -o write_test2 write_test2.c  -rdynamic
 stream: stream.c
 	$(CC) $(CFLAGS) -o stream stream.c
 large_hist: large_hist.c
@@ -69,6 +71,11 @@ myrunc:
 
 mywritetest:
 	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; ./write_test
+mywritetest2:
+	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; ./write_test2
+showwritetest:
+#	darshan-history.pl --summary darshanlog-*.gz
+	darshan-parser --history darshanlog-*.gz
 mycat:
 	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; cat ccode.c >/tmp/123
 mywc:

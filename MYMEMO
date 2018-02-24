@@ -26,3 +26,4 @@ $ make install
 
 $ darshan-job-summary.pl darshanlog-ubuntu-1503203011-large_hist-5712
 $ darshan-history.pl --summary xxxxx.gz
+$ darshan-parser --history xxxx.gz
