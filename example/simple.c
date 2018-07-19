@@ -1,4 +1,6 @@
+#ifdef MPI
 #include <mpi.h>
+#endif /* MPI */
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -43,14 +45,15 @@ main(int argc, char **argv)
 	exit(-1);
     }
 
+#ifdef MPI
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
     printf("MPI_Wtime = %f\n", MPI_Wtime());
+#endif /* MPI */
     wsz = wtot = 0;
     memset(buf, 0, BSIZE);
     fname = argv[1];
-#if 0
     fd1 = open_file(O_CREAT|O_WRONLY, argv[1], myrank, "a", 0);
     if (fd1 < 0) {
 	fprintf(stderr, "Cannot create file %s\n", fname);
@@ -66,11 +69,9 @@ main(int argc, char **argv)
     sleep(1);
     close(fd1);
     sleep(1);
-#endif
     for (times = 0; times < TCOUNT; times++) {
 	fd1 = open_file(O_APPEND|O_WRONLY, fname, myrank, "a", 0);
-//	fd2 = open_file(O_CREAT|O_WRONLY, fname, myrank, "b", times);
-	fd2 = open_file(O_APPEND|O_WRONLY, fname, myrank, "b", times);
+	fd2 = open_file(O_CREAT|O_WRONLY, fname, myrank, "b", times);
 	printf("fd1(%d) fd2(%d)\n", fd1, fd2);
 	if (fd2 < 0) {
 	    fprintf(stderr, "Cannot create file %s\n", fname);
@@ -100,6 +101,8 @@ main(int argc, char **argv)
     printf("Writing %ld MB to %s\n", wtot, fname);
     cnd = 0;
 ext:
+#ifdef MPI
     MPI_Finalize();
+#endif /* MPI */
     return cnd;
 }

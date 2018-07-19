@@ -7,12 +7,16 @@ DIST_DIR=darshan-aics
 #
 DIST_WORKDIR=$DIST_TMPDIR/$DIST_DIR
 mkdir -p $DIST_WORKDIR/
+mkdir -p $DIST_WORKDIR/example
 cp -rp  $DARSHAN $DIST_WORKDIR/
 (cd $DIST_WORKDIR/darshan-2.3.0; rm -f MEMO*)
 (cd $DIST_WORKDIR/darshan-2.3.0/darshan-runtime; make clean)
 (cd $DIST_WORKDIR/darshan-2.3.0/darshan-util; make clean)
-cp -rp INSTALL-aics.txt $DIST_WORKDIR/
-cp -rp README-aics.txt $DIST_WORKDIR/
+cp -p INSTALL-aics.txt $DIST_WORKDIR/
+cp -p README-aics.txt $DIST_WORKDIR/
+cp -p example/Makefile.example $DIST_WORKDIR/example/Makefile
+cp -p example/run-k.sh $DIST_WORKDIR/example/
+cp -p example/simple.c $DIST_WORKDIR/example/
 #
 (cd $DIST_TMPDIR; tar czf $DIST_TAR $DIST_DIR)
 mv $DIST_TMPDIR/$DIST_TAR ./

@@ -11,9 +11,11 @@ CC = cc
 #CFLAGS  = -O2 -Wall  ## backtrace does not work properly
 CFLAGS  = -O -Wall
 
-all: simple simple2 simple3 ccode write_test write_test2 stream large_hist
+all: simple simple-mpi simple2 simple3 ccode write_test write_test2 stream large_hist
 simple: simple.c
 	$(MPICC) $(CFLAGS) -o simple simple.c
+simple-mpi: simple.c
+	$(MPICC) $(CFLAGS) -DMPI -o simple-mpi simple.c
 simple2: simple2.c
 	$(MPICC) $(CFLAGS) -o simple2 simple2.c
 simple3: simple3.c
@@ -37,7 +39,7 @@ libcopy:
 clean:
 	rm -f darshanlog-*
 clean2:
-	rm -f wdata* *.o simple simple2 simple3 ccode write_test stream
+	rm -f wdata* *.o simple simple-mpi simple2 simple3 ccode write_test stream
 sub:
 	pjsub ./run.sh
 stat:
@@ -48,7 +50,7 @@ rcp:
 	scp test.tar.gz a03228@k.aics.riken.jp:
 myrun:
 	mkdir -p ./darshan/`date +%Y/%m/%d | sed -e "s/\/0/\//g"`
-	export LD_PRELOAD=./libdarshan.so; export DARSHAN_HISTORY_RW="w"; mpirun -np 2 ./simple wdata
+	export LD_PRELOAD=./libdarshan.so; export DARSHAN_HISTORY_RW="w"; mpirun -np 2 ./simple-mpi wdata
 myrun2:
 	mkdir -p ./darshan/`date +%Y/%m/%d | sed -e "s/\/0/\//g"`
 	export LD_PRELOAD=./libdarshan.so; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=10485760; mpirun -np 2 ./simple2 wdata

@@ -5,7 +5,7 @@ $ ./configure --prefix=/home/ishikawa/darshan/ \
   --with-log-path=./darshan --with-jobid-env=PBS_JOBID \
   CC=mpicc CFLAGS="-Wall -O2 -g -DHISTORY -DHISTORY_CALLER"
 $ cd darshan-util
-$ ./configure CC=cc CFLAGS="-DHISTORY -DHISTORY_CALLER"
+$ ./configure --prefix=/home/ishikawa/darshan/ CC=cc CFLAGS="-DHISTORY -DHISTORY_CALLER"
 $ make
 $ make install
 
