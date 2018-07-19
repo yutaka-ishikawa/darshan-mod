@@ -1,12 +1,12 @@
 MPICC   =       mpifccpx
 CFLAGS  = -DFJ_MPI -O3 -Xg
 
-all: simple-mpi simple
+all: simple-mpi simple-single
 
 simple-mpi: simple.c
 	$(MPICC) $(CFLAGS) -DMPI -o simple-mpi simple.c
-simple: simple.c
-	$(MPICC) $(CFLAGS) -o simple simple.c
+simple-single: simple.c
+	$(MPICC) $(CFLAGS) -o simple-single simple.c
 
 #
 # For x86 Linux
