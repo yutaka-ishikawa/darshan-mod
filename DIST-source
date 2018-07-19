@@ -16,7 +16,7 @@ cp -p INSTALL-aics.txt $DIST_WORKDIR/
 cp -p README-aics.txt $DIST_WORKDIR/
 cp -p example/Makefile.example $DIST_WORKDIR/example/Makefile
 cp -p example/run-k-mpi.sh $DIST_WORKDIR/example/
-cp -p example/run-k-simple.sh $DIST_WORKDIR/example/
+cp -p example/run-k-single.sh $DIST_WORKDIR/example/
 cp -p example/simple.c $DIST_WORKDIR/example/
 #
 (cd $DIST_TMPDIR; tar czf $DIST_TAR $DIST_DIR)
