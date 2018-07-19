@@ -14,4 +14,9 @@
 
 mkdir -p ../darshan/`date +%Y/%m/%d | sed -e "s/\/0/\//g"`
 
-mpiexec -x "LD_PRELOAD=./libdarshan.so" -x "DARSHAN_HISTORY_RW=rw" -ofprefix rank,nid ./simple wdata
+mpiexec -x "LD_PRELOAD=./libdarshan.so" -x "DARSHAN_HISTORY_RW=rw" -ofprefix rank,nid ./simple-mpi wdata
+
+export LD_PRELOAD=./libdarshan.so
+export DARSHAN_HISTORY_RW=rw
+./simple wdata2
+
