@@ -12,8 +12,8 @@ cp -p darshan-2.3.0/darshan-runtime/lib/libdarshan.so $DIST_WORKDIR/k-lib/
 cp -p darshan-2.3.0/darshan-runtime/lib/libdarshan-single.so $DIST_WORKDIR/k-lib/
 cp -p darshan-2.3.0/darshan-util/darshan-parser $DIST_WORKDIR/bin/
 cp -p example/Makefile.example $DIST_WORKDIR/example/Makefile
-cp -p darshan-2.3.0/darshan-runtime/lib/libdarshan.so $DIST_WORKDIR/example/
-cp -p example/run-k.sh $DIST_WORKDIR/example/
+cp -p example/run-k-simple.sh $DIST_WORKDIR/example/
+cp -p example/run-k-mpi.sh $DIST_WORKDIR/example/
 cp -p example/simple.c $DIST_WORKDIR/example/
 (cd $DIST_TMPDIR; tar czf $DIST_TAR $DIST_DIR; mv $DIST_TAR ../)
 /bin/rm -rf $DIST_TMPDIR
