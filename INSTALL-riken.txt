@@ -43,7 +43,7 @@ $ cd $(TOP)/darshan-2.3.0/darshan-runtime
 $ ./configure --host=x86_64-unknown-linux-gnu \
   --target=sparc64v-sparc-linux-gnu --with-mem-align=8 \
   --with-log-path=../darshan --with-jobid-env=NONE \
-  CC="mpifccpx -Xg" CFLAGS="-O2 -g -DHISTORY -DK_SUPERCOMPUTER"
+  CC="mpifccpx -Xg" CFLAGS="-O2 -g -DHISTORY -DHISTORY_CALLER -DK_SUPERCOMPUTER"
 $ make
 
 You will get the libdarshan.so under the lib directory.  To view log
