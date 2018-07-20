@@ -1,8 +1,8 @@
 Extended Darshan (Based on 2.3.0 release)
-					      Feburary 24, 2018
+					      July 20, 2018
 					      System Software Research Team
 					      System Software Development Team
-					       			    RIKEN AICS
+					       			   RIKEN R-CCS
 					      Fujitsu Ltd.
 Darshan is developed at Argonne National Laboratory.  We extend it to
 recording file I/O operation history.
@@ -105,7 +105,7 @@ The format of log file name is
    extract recorded information. You may directly use this tool.
     $ darshan-parser --history <log file>
 
-   If the execution of the following sample program hass been recorded:
+   If the execution of the following sample program has been recorded:
 	fp = fopen("file.txt, "w+"); fwrite(data, 1024, 10, fp);  fclose(fp);
 	fp = fopen("file.txt, "w+"); fwrite(data, 1024, 100, fp); fclose(fp);
 	fp = fopen("file.txt, "w+"); fwrite(data, 1024, 1, fp);   fclose(fp);

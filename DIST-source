@@ -1,9 +1,9 @@
 #!/bin/bash
 #
 DARSHAN=darshan-2.3.0
-DIST_TAR=darshan-aics-source-`date +%Y%m%d`.tar.gz
-DIST_TMPDIR=dist-darshan-aics
-DIST_DIR=darshan-aics
+DIST_TAR=darshan-riken-source-`date +%Y%m%d`.tar.gz
+DIST_TMPDIR=dist-darshan-riken
+DIST_DIR=darshan-riken
 #
 DIST_WORKDIR=$DIST_TMPDIR/$DIST_DIR
 mkdir -p $DIST_WORKDIR/
@@ -12,8 +12,8 @@ cp -rp  $DARSHAN $DIST_WORKDIR/
 (cd $DIST_WORKDIR/darshan-2.3.0; rm -f MEMO*)
 (cd $DIST_WORKDIR/darshan-2.3.0/darshan-runtime; make clean)
 (cd $DIST_WORKDIR/darshan-2.3.0/darshan-util; make clean)
-cp -p INSTALL-aics.txt $DIST_WORKDIR/
-cp -p README-aics.txt $DIST_WORKDIR/
+cp -p INSTALL-riken.txt $DIST_WORKDIR/
+cp -p README-riken.txt $DIST_WORKDIR/
 cp -p example/Makefile.example $DIST_WORKDIR/example/Makefile
 cp -p example/run-k-mpi.sh $DIST_WORKDIR/example/
 cp -p example/run-k-single.sh $DIST_WORKDIR/example/

@@ -1,5 +1,5 @@
 Extended Darshan (Based on 2.3.0 release)
-					      Feburary 08, 2018
+					      July 20, 2018
 					      System Software Research Team
 					      System Software Development Team
 					       			    RIKEN AICS

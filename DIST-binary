@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-DIST_TAR=darshan-aics-bin-`date +%Y%m%d`.tar.gz
+DIST_TAR=darshan-riken-bin-`date +%Y%m%d`.tar.gz
 DIST_TMPDIR=dist-darshan
 DIST_DIR=darshan
 DIST_WORKDIR=$DIST_TMPDIR/$DIST_DIR
 mkdir -p $DIST_WORKDIR/k-lib
 mkdir -p $DIST_WORKDIR/bin
 mkdir -p $DIST_WORKDIR/example
-cp -p README-aics.txt $DIST_WORKDIR/
+cp -p README-riken.txt $DIST_WORKDIR/
 cp -p darshan-2.3.0/darshan-runtime/lib/libdarshan.so $DIST_WORKDIR/k-lib/
 cp -p darshan-2.3.0/darshan-runtime/lib/libdarshan-single.so $DIST_WORKDIR/k-lib/
 cp -p darshan-2.3.0/darshan-util/darshan-parser $DIST_WORKDIR/bin/
