@@ -25,7 +25,7 @@ func2(int fd, char *buf, size_t wsz)
 {
     size_t	sz;
     printf("func2 is called\n");
-    if ((sz = write(fd, buf, wsz)) < 0) {
+    if ((int) (sz = write(fd, buf, wsz)) < 0) {
 	fprintf(stderr, "Cannot write data\n");
 	exit(-1);
     }

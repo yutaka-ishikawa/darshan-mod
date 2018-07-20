@@ -1,12 +1,17 @@
+CC	= fccpx
 MPICC   =       mpifccpx
 CFLAGS  = -DFJ_MPI -O3 -Xg
 
-all: simple-mpi simple-single
+all: simple-mpi simple-single ccode
 
 simple-mpi: simple.c
 	$(MPICC) $(CFLAGS) -DMPI -o simple-mpi simple.c
 simple-single: simple.c
 	$(MPICC) $(CFLAGS) -o simple-single simple.c
+ccode: ccode.c ccode-func.c
+	$(CC) -Xg -O -g -o ccode ccode.c ccode-func.c -rdynamic
+clean: simple-mpi simple-single ccode
+	rm -f $^
 
 #
 # For x86 Linux

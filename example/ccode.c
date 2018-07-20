@@ -23,7 +23,7 @@ main()
 	wsz = 1024;
 	for (j = 0; j < 10; j++) {
 	    totw = func2(fd, buf, wsz);
-	    if (wsz < 0) {
+	    if ((int)wsz < 0) {
 		printf("Cannot write data after writing %ld MB\n", totw);
 	    }
 	    usleep(10000);

@@ -55,7 +55,7 @@ it does not fully work.  The login node does not have libz and
 libbz2 libraries.
 
 $ cd $(TOP)/darshan-2.3.0/darshan-util
-$ ./configure CC=cc CFLAGS=-DHISTORY
+$ ./configure CC=cc CFLAGS="-DHISTORY -DHISTORY_CALLER"
 $ make
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
