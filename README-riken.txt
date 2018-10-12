@@ -1,5 +1,5 @@
 Extended Darshan (Based on 2.3.0 release)
-					      July 20, 2018
+					      October 12, 2018
 					      System Software Research Team
 					      System Software Development Team
 					       			   RIKEN R-CCS
@@ -157,6 +157,30 @@ Note:
 
 -------------------------------------------------------------------------------
 HISTORY:
+10/09/2018
+- The following stream functions are now captured.
+  - fputc, fputs, putc, IO_putc, putchar, puts, fgetc, fgets, IO_getc,
+    getchar, ungetc, gets, getline, getdelim,
+
+- The "_exit" function was not captured. This affects that IO
+  activities in processes created inside python are not reported
+  because the darshan finalization function is not invoked. It is now
+  fixed.
+- If a process is created by the clone C library, the exit semantics
+  is not the same semantics in a process invoked by fork system call.
+  The former process does not call exit or _exit C function, but
+  directly issues the exit system call. This affects that IO
+  activities in this cloned process are not reported because the
+  darshan finalization function is not invoked.  It is now fixed.
+- The USE_TSC compile option is introduced in order to use the
+  hardware time samp counter for elapsed time. The gettimeofday system
+  call is time consumed operation against FILE stream operations
+  without involving disk I/O in the K computer. This problem is not so
+  critical problem in x86 and Arm architectures because the
+  gettimeofday system such architectures is implemented using vSDO
+  feature.
+
+
 02/24/2018
 -  The following bugs are fixed:
 	- Though the file size field is 64 bit, htonl and ntohl were

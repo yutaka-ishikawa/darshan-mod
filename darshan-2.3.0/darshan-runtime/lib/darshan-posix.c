@@ -114,6 +114,42 @@ DARSHAN_FORWARD_DECL(lio_listio64, int, (int mode, struct aiocb64 *const aiocb_l
 DARSHAN_FORWARD_DECL(aio_return, ssize_t, (struct aiocb *aiocbp));
 DARSHAN_FORWARD_DECL(aio_return64, ssize_t, (struct aiocb64 *aiocbp));
 
+DARSHAN_FORWARD_DECL(fprintf, int, (FILE *stream, const char *fmt, ...));
+DARSHAN_FORWARD_DECL(printf, int, (const char *fmt, ...));
+DARSHAN_FORWARD_DECL(__fprintf_chk, int, (FILE *stream, int flag, const char *fmt, ...));
+DARSHAN_FORWARD_DECL(__printf_chk, int, (int flag, const char *fmt, ...));
+DARSHAN_FORWARD_DECL(fputc, int, (int c, FILE *stream));
+DARSHAN_FORWARD_DECL(fputs, int, (const char *s, FILE *stream));
+/* DARSHAN_FORWARD_DECL(putc, int, (int c, FILE *stream)); */
+DARSHAN_FORWARD_DECL(IO_putc, int, (int c, FILE *stream));
+DARSHAN_FORWARD_DECL(putchar, int, (int c));
+DARSHAN_FORWARD_DECL(puts, int, (const char *s));
+/**/
+DARSHAN_FORWARD_DECL(fgetc, int, (FILE *stream));
+DARSHAN_FORWARD_DECL(fgets, char*, (char *s, int size, FILE *stream));
+/* DARSHAN_FORWARD_DECL(getc, int, (FILE *stream)); */
+DARSHAN_FORWARD_DECL(IO_getc, int, (FILE *stream));
+DARSHAN_FORWARD_DECL(getchar, int, (void));
+DARSHAN_FORWARD_DECL(ungetc, int, (int c, FILE *stream));
+/* gets is actually deprecated */
+DARSHAN_FORWARD_DECL(gets, char*, (char*s));
+DARSHAN_FORWARD_DECL(getline, ssize_t, (char **lineptr, size_t *n, FILE *stream));
+DARSHAN_FORWARD_DECL(getdelim, ssize_t, (char **lineptr, size_t *n, int delim, FILE *stream));
+/*DARSHAN_FORWARD_DECL(exit_group, void, (int status))*/
+DARSHAN_FORWARD_DECL(_exit, void, (int status))
+DARSHAN_FORWARD_DECL(clone, int,
+		     (int (*fn)(void *), void *child_stack,
+		      int flags, void *arg, ...));
+
+/*
+  stream IO for wide character is not supported at this time. 2018/09/27. 
+  DARSHAN_FORWARD_DECL(fgetwc, wint_t, (FILE *stream));
+  DARSHAN_FORWARD_DECL(getwc, wint_t, (FILE *stream));
+  DARSHAN_FORWARD_DECL(ungetwc, wint_t, (wint_t wc, FILE *stream));
+  DARSHAN_FORWARD_DECL(fgetws, wchar_t*, (wchar_t *ws, int n, FILE *stream));
+*/
+
+
 pthread_mutex_t cp_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 struct darshan_job_runtime* darshan_global_job = NULL;
 static int my_rank = -1;
@@ -1470,6 +1506,10 @@ void darshan_initialize(int argc, char** argv,  int nprocs, int rank)
         darshan_get_exe_and_mounts(darshan_global_job);
 #endif /* K_SUPERCOMPUTER || DARSHAN_SINGLE */
 
+#ifdef USE_TSC
+    posix_wtime(); /* for initialization purpose */
+#endif /* USE_TSC */
+
     return;
 }
 
@@ -1928,10 +1968,48 @@ void darshan_search_bench(int argc, char** argv, int iters)
     free(size_array);
 }
 
+#ifdef USE_TSC
+FILE*
+darshan_fopen(const char *path, const char *mode)
+{
+    MAP_OR_FAIL(fopen);
+    return __real_fopen(path, mode);
+}
+
+int
+darshan_fclose(FILE *fp)
+{
+    MAP_OR_FAIL(fclose);
+    return  __real_fclose(fp);
+}
+
+char*
+darshan_fgets(char *s, int size, FILE *stream)
+{
+    MAP_OR_FAIL(fgets);
+    return __real_fgets(s, size, stream);
+}
+
+#include "tsc.h"
+static double	tsc_hz;
+static uint64_t	tsc_start = 0;
+static double posix_wtime(void)
+{
+    double	sec;
+
+    if (tsc_start == 0) {
+	tsc_hz = (double) tick_helz(0);
+	tsc_start = tick_time();
+    }
+    sec = (double) (tick_time() - tsc_start) / tsc_hz;
+    return sec;
+}
+#else
 static double posix_wtime(void)
 {
     return DARSHAN_MPI_CALL(PMPI_Wtime)();
 }
+#endif /* USE_TSC */
 
 double darshan_wtime(void)
 {
@@ -2335,10 +2413,6 @@ static struct darshan_aio_tracker* darshan_aio_tracker_del(int fd, void *aiocbp)
     return(tmp);
 }
 
-DARSHAN_FORWARD_DECL(fprintf, int, (FILE *stream, const char *fmt, ...));
-DARSHAN_FORWARD_DECL(printf, int, (const char *fmt, ...));
-DARSHAN_FORWARD_DECL(__fprintf_chk, int, (FILE *stream, int flag, const char *fmt, ...));
-DARSHAN_FORWARD_DECL(__printf_chk, int, (int flag, const char *fmt, ...));
 
 #ifdef HISTORY
 #ifdef WORDS_BIGENDIAN
@@ -2603,6 +2677,326 @@ int DARSHAN_DECL(__printf_chk)(int flag, const char *fmt, ...)
     CP_UNLOCK();
     return ret;
 }
+
+int DARSHAN_DECL(fputc)(int c, FILE *stream)
+{
+    int		ret, fd;
+    double	tm1, tm2;
+
+    CHECK_DARSHAN_INIT();
+    MAP_OR_FAIL(fputc);
+
+    tm1 = darshan_wtime();
+    ret = __real_fputc(c, stream);
+    tm2 = darshan_wtime();
+    fd = fileno(stream);
+    CP_LOCK();
+    CP_RECORD_WRITE(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_write(fd, ret, tm1, tm2);
+    CP_UNLOCK();
+    return ret;
+}
+
+int DARSHAN_DECL(fputs)(const char *s, FILE *stream)
+{
+    int		ret, fd;
+    double	tm1, tm2;
+
+    CHECK_DARSHAN_INIT();
+    MAP_OR_FAIL(fputs);
+
+    tm1 = darshan_wtime();
+    ret = __real_fputs(s, stream);
+    tm2 = darshan_wtime();
+    fd = fileno(stream);
+    CP_LOCK();
+    CP_RECORD_WRITE(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_write(fd, ret, tm1, tm2);
+    CP_UNLOCK();
+    return ret;
+}
+
+int DARSHAN_DECL(IO_putc)(int c, FILE *stream)
+{
+    int		ret, fd;
+    double	tm1, tm2;
+
+    CHECK_DARSHAN_INIT();
+    MAP_OR_FAIL(IO_putc);
+
+    tm1 = darshan_wtime();
+    ret = __real_IO_putc(c, stream);
+    tm2 = darshan_wtime();
+    fd = fileno(stream);
+    CP_LOCK();
+    CP_RECORD_WRITE(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_write(fd, ret, tm1, tm2);
+    CP_UNLOCK();
+    return ret;
+}
+
+int DARSHAN_DECL(putchar)(int c)
+{
+    int		ret, fd;
+    double	tm1, tm2;
+
+    CHECK_DARSHAN_INIT();
+    MAP_OR_FAIL(putchar);
+
+    tm1 = darshan_wtime();
+    ret = __real_putchar(c);
+    tm2 = darshan_wtime();
+    fd = fileno(stdout);
+    CP_LOCK();
+    CP_RECORD_WRITE(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_write(fd, ret, tm1, tm2);
+    CP_UNLOCK();
+    return ret;
+}
+
+
+int DARSHAN_DECL(puts)(const char *s)
+{
+    int		ret, fd;
+    double	tm1, tm2;
+
+    CHECK_DARSHAN_INIT();
+    MAP_OR_FAIL(puts);
+
+    tm1 = darshan_wtime();
+    ret = __real_puts(s);
+    tm2 = darshan_wtime();
+    fd = fileno(stdout);
+    CP_LOCK();
+    CP_RECORD_WRITE(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_write(fd, ret, tm1, tm2);
+    CP_UNLOCK();
+    return ret;
+}
+
+int DARSHAN_DECL(fgetc)(FILE *stream)
+{
+    int ret, fd;
+    double tm1, tm2;
+
+    MAP_OR_FAIL(fgetc);
+
+    tm1 = darshan_wtime();
+    ret = __real_fgetc(stream);
+    tm2 = darshan_wtime();
+    fd = fileno(stream);
+    CP_LOCK();
+    CP_RECORD_READ(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_read(fd, ret, tm1, tm2);
+    CP_UNLOCK();
+    return ret;
+}
+
+char* DARSHAN_DECL(fgets)(char *s, int size, FILE *stream)
+{
+    char *rs;
+    int ret, fd;
+    double tm1, tm2;
+
+    MAP_OR_FAIL(fgets);
+
+    tm1 = darshan_wtime();
+    rs = __real_fgets(s, size, stream);
+    tm2 = darshan_wtime();
+    fd = fileno(stream);
+    if (rs == s) ret = strlen(s); else ret = 0;
+    CP_LOCK();
+    CP_RECORD_READ(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_read(fd, ret, tm1, tm2);
+    CP_UNLOCK();
+    return rs;
+}
+
+int DARSHAN_DECL(IO_getc)(FILE *stream)
+{
+    int ret, fd;
+    double tm1, tm2;
+
+    MAP_OR_FAIL(IO_getc);
+
+    tm1 = darshan_wtime();
+    ret = __real_IO_getc(stream);
+    tm2 = darshan_wtime();
+    fd = fileno(stream);
+    CP_LOCK();
+    CP_RECORD_READ(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_read(fd, ret, tm1, tm2);
+    CP_UNLOCK();
+    return ret;
+}
+
+int DARSHAN_DECL(getchar)(void)
+{
+    int ret, fd;
+    double tm1, tm2;
+
+    MAP_OR_FAIL(getchar);
+
+    tm1 = darshan_wtime();
+    ret = __real_getchar();
+    tm2 = darshan_wtime();
+    fd = fileno(stdin);
+    CP_LOCK();
+    CP_RECORD_READ(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_read(fd, ret, tm1, tm2);
+    CP_UNLOCK();
+    return ret;
+}
+
+int DARSHAN_DECL(ungetc)(int c, FILE *stream)
+{
+    int ret, fd;
+    double tm1, tm2;
+
+    MAP_OR_FAIL(ungetc);
+
+    tm1 = darshan_wtime();
+    ret = __real_ungetc(c, stream);
+    tm2 = darshan_wtime();
+    fd = fileno(stream);
+    CP_LOCK();
+    CP_RECORD_READ(0, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    /* one byte push back */
+    if (ret == c) ret = -1; else ret = 0;
+    darshan_history_read(fd, ret, tm1, tm2);
+    CP_UNLOCK();
+    return ret;
+}
+
+char* DARSHAN_DECL(gets)(char *s)
+{
+    char *rs;
+    int ret, fd;
+    double tm1, tm2;
+
+    MAP_OR_FAIL(gets);
+
+    tm1 = darshan_wtime();
+    rs = __real_gets(s);
+    tm2 = darshan_wtime();
+    fd = fileno(stdin);
+    if (rs == s) ret = strlen(s); else ret = 0;
+    CP_LOCK();
+    CP_RECORD_READ(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_read(fd, ret, tm1, tm2);
+    CP_UNLOCK();
+    return rs;
+}
+
+ssize_t DARSHAN_DECL(getline)(char **lineptr, size_t *n, FILE *stream)
+{
+    ssize_t ret;
+    int fd;
+    double tm1, tm2;
+
+    MAP_OR_FAIL(getline);
+
+    tm1 = darshan_wtime();
+    ret = __real_getline(lineptr, n, stream);
+    tm2 = darshan_wtime();
+    fd = fileno(stream);
+    if (ret < 0) ret = 0;
+    CP_LOCK();
+    CP_RECORD_READ(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_read(fd, ret, tm1, tm2);
+    CP_UNLOCK();
+    return ret;
+}
+
+ssize_t DARSHAN_DECL(getdelim)(char **lineptr, size_t *n, int delim, FILE *stream)
+{
+    ssize_t ret;
+    int fd;
+    double tm1, tm2;
+
+    MAP_OR_FAIL(getdelim);
+
+    tm1 = darshan_wtime();
+    ret = __real_getdelim(lineptr, n, delim, stream);
+    tm2 = darshan_wtime();
+    fd = fileno(stream);
+    if (ret < 0) ret = 0;
+    CP_LOCK();
+    CP_RECORD_READ(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_read(fd, ret, tm1, tm2);
+    CP_UNLOCK();
+    return ret;
+}
+
+/***
+void DARSHAN_DECL(exit_group)(int status)
+{
+    MAP_OR_FAIL(exit_group);
+    fprintf(stderr, "EXIT_GROUP!!!\n");
+#ifdef DARSHAN_SINGLE
+    {
+	extern void darshan_single_exit();
+	darshan_single_exit();
+    }
+#endif
+    __real_exit_group(status);
+}
+**/
+
+void DARSHAN_DECL(_exit)(int status)
+{
+    MAP_OR_FAIL(_exit);
+    /*fprintf(stderr, "_EXIT!!!\n");*/
+#ifdef DARSHAN_SINGLE
+    {
+	extern void darshan_single_exit();
+	darshan_single_exit();
+    }
+#endif
+    __real__exit(status);
+}
+
+struct clonearg {
+    int		(*fn)(void*);
+    void	*arg;
+};
+static int myclonestart(void *arg)
+{
+    int		ret;
+    struct clonearg	*carg = (struct clonearg*) arg;
+    
+    ret = carg->fn(carg->arg);
+#ifdef DARSHAN_SINGLE
+    {
+	extern void darshan_single_exit();
+	darshan_single_exit();
+    }
+#endif
+    return ret;
+}
+
+int DARSHAN_DECL(clone)(int (*fn)(void *), void *child_stack,
+			 int flags, void *arg, ...)
+{
+    va_list	ap;
+    pid_t	*ptid, *ctid;
+    void	*newtls;
+    struct clonearg carg;
+    int	ret;
+    
+    MAP_OR_FAIL(clone);
+    carg.fn = fn;
+    carg.arg = arg;
+    va_start(ap, arg);
+    ptid = va_arg(ap, pid_t*);
+    newtls = va_arg(ap, void*);
+    ctid = va_arg(ap, pid_t*);
+    ret = __real_clone(myclonestart, child_stack, flags, &carg,
+		       ptid, newtls, ctid);
+    va_end(ap);
+    return ret;
+}
+
 
 void
 darshan_history_stdio_init()

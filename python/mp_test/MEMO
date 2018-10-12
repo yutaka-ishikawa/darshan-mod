@@ -1,0 +1,45 @@
+multiprocessing.Process
+popoen_fork.pyで定義されているPopenクラスのインスタンスはプロセス生成
+os.forkが呼ばれる。
+子プロセスはprocess_objの_bootstrapを呼ぶ
+
+ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+multiprocessing.Pool(n)
+
+PoolメソッドはBaseContextのPoolが最初に呼ばれる。
+これはpool.pyのPoolメソッドを呼ぶ。この時multiprocessingが保持している
+self.get_context()が渡される。
+        return Pool(processes, initializer, initargs, maxtasksperchild,
+                    context=self.get_context())
+Poolクラスはpool.pyで定義されていて、__init__が呼ばれる。このメソッド内で
+_repopulate_poolメソッドが呼ばれる。これがさらに
+_repopulte_pool_staticを呼ぶ。ここで、Process関数が呼ばれて生成。
+このProcess関数は、pool.pyで定義されている。これはstatic methodらしい。
+こいつが、ctx.Processを呼び出す。ということでプロセスの生成はctxがやっている。
+pool.pyの156行目でctx.Process(*args, **kwds)が呼ばれる。
+ctxはForkContextオブジェクト。これはcontext.pyで定義されていて、
+BaseContextの__init__メソッドが呼ばれている。
+Popenクラスのインスタンスが作成され、そこで
+	self._launch(process_obj)
+が呼ばれる。これはpopen_fork.pyで定義されている。
+_launchメソッドでforkが呼ばれる。
+
+pool.mapの動き。
+poolオブジェクトはmultiprocessing.pool.Pool object
+_map_asyncが呼ばれる
+Pool._get_tasksメソッドの中で yield関数が呼ばれる。これがプロセス実行ぽい。
+
+
+childFunc (arg=<optimized out>) at clonetest.c:44
+44	}
+(gdb) backtrace
+#0  childFunc (arg=<optimized out>) at clonetest.c:44
+#1  0x00007f878caaed7f in clone ()
+    at ../sysdeps/unix/sysv/linux/x86_64/clone.S:105
+(gdb) x/i 0x00007f878caaed7f 
+   0x7f878caaed7f <clone+95>:	mov    %rax,%rdi
+(gdb) 
+   0x7f878caaed82 <clone+98>:	callq  0x7f878ca73700 <__GI__exit>
+(gdb) 
+   0x7f878caaed87 <clone+103>:	
+    mov    0x2b80ea(%rip),%rcx        # 0x7f878cd66e78

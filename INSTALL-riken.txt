@@ -1,8 +1,8 @@
 Extended Darshan (Based on 2.3.0 release)
-					      July 20, 2018
+					      October 12, 2018
 					      System Software Research Team
 					      System Software Development Team
-					       			    RIKEN AICS
+					       			    RIKEN R-CCS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 In case of Linux-Xeon
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -43,7 +43,7 @@ $ cd $(TOP)/darshan-2.3.0/darshan-runtime
 $ ./configure --host=x86_64-unknown-linux-gnu \
   --target=sparc64v-sparc-linux-gnu --with-mem-align=8 \
   --with-log-path=../darshan --with-jobid-env=NONE \
-  CC="mpifccpx -Xg" CFLAGS="-O2 -g -DHISTORY -DHISTORY_CALLER -DK_SUPERCOMPUTER"
+  CC="mpifccpx -Xg" CFLAGS="-O2 -g -DHISTORY -DHISTORY_CALLER -DK_SUPERCOMPUTER -DUSE_TSC"
 $ make
 
 You will get the libdarshan.so under the lib directory.  To view log
@@ -61,7 +61,7 @@ $ make
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 About Extension
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-The following two ifdef constants are introduced for AICS extensions.
+The following two ifdef constants are introduced for R-CCS extensions.
 -DHISTORY_CALLER
  To enable recording caller names of read/write system call.
 -DHISTORY
@@ -70,6 +70,9 @@ The following two ifdef constants are introduced for AICS extensions.
  A feature, not working in K computer, is commented out at this
  moment.  We have not yet investigated the reason, but it seems that
  setmntent and getmntent funtions might cause illegal memory changes.
+-DUSE_TSC
+ To use CPU time stamp counter for getting elapse time. This should be used
+ in K computer.
 
 -------------------------------------------------------------------------------
 			Written by Yutaka Ishikawa, yutaka.ishikawa@riken.jp

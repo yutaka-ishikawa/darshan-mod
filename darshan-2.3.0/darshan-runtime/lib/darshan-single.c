@@ -18,12 +18,14 @@
 #include <dlfcn.h>
 #include <linux/limits.h>
 #include <errno.h>
+#include <signal.h>
 
 #define CP_MAX_MEM_SEGMENTS 8 /* comes from darshan-mpi-io.c */
 
 extern void darshan_history_construct_indices(struct darshan_job_runtime* final_job, int rank, int* inout_count, int* lengths, void** pointers);
 extern void darshan_history_stdio_init();
 extern void darshan_history_stdio_exit();
+extern void darshan_single_exit(void);
 
 struct darshan_history_header	*darshan_hheader;
 double		(*__real_PMPI_Wtime)(void);
@@ -31,14 +33,13 @@ static int	single_init_f = 0;
 static char	cmdline[CP_EXE_LEN + 1];
 static char	**argv;
 static char	*cmdname;
-static pid_t	pid;
+static pid_t	pid, ppid;
 
 static int (*real_open)(const char *pathname, int flags, mode_t mode);
 static int (*real_close)(int fd);
 static ssize_t (*real_write)(int fd, const void *buf, size_t count);
 static ssize_t (*real_read)(int fd, const void *buf, size_t count);
 
-static void	darhsan_single_exit(void);
 static int	cp_log_compress(struct darshan_job_runtime* final_job,
 		    int rank, int* inout_count, int* lengths, void** pointers);
 
@@ -75,6 +76,20 @@ darshan_single_last_int_msg(char *where, unsigned long val)
 }
 #endif /* HISTORY_DEBUG */
 
+/*
+ * Processes in python's multiprocessing.Pool will receive SIGTERM
+ */
+static  struct sigaction oldsigaction;
+
+static void
+handle_sigterm(int signum, siginfo_t *info, void *p)
+{
+    /*printf("handle_sigterm is invoked\n");*/
+    sigaction(SIGTERM, &oldsigaction, NULL);
+    darshan_single_exit();
+}
+
+
 void
 darshan_single_init()
 {
@@ -82,15 +97,22 @@ darshan_single_init()
     char	*cp;
     int		argc = 0;
     char	bufpath[1024];
+    struct sigaction	newsigaction;
 
     if (single_init_f == 1) {
 	return;
     }
     single_init_f = 1;
+
+    newsigaction.sa_flags = SA_SIGINFO;
+    sigemptyset(&newsigaction.sa_mask);
+    newsigaction.sa_sigaction = handle_sigterm;
+    sigaction(SIGTERM, &newsigaction, &oldsigaction);
+
 #ifdef HISTORY_DEBUG
     printf("darshan_single_init: invoked\n");
 #endif /* HISTORY_DEBUG */
-    atexit(darhsan_single_exit);
+    atexit(darshan_single_exit);
     __real_PMPI_Wtime = darshan_single_wtime;
 
     real_open = (int (*)(const char*, int, mode_t)) dlsym(RTLD_NEXT, "open");
@@ -98,7 +120,7 @@ darshan_single_init()
     real_write = (ssize_t (*)(int, const void*, size_t)) dlsym(RTLD_NEXT, "write");
     real_read = (ssize_t (*)(int, const void*, size_t)) dlsym(RTLD_NEXT, "read");
 
-    pid = getpid();
+    ppid = pid = getpid();
     snprintf(bufpath, 1024, "/proc/%d/cmdline", pid);
     fd = real_open(bufpath, O_RDONLY, 0);
     if (fd < 0) goto skip;
@@ -151,8 +173,8 @@ darshan_mnt_id_from_path(const char* path, int64_t* device_id, int64_t* block_si
  *	if stderr has been closed before the exit system call.
  *	An example is the cp command.
  */
-static void
-darhsan_single_exit()
+void
+darshan_single_exit()
 {
     struct darshan_job_runtime* final_job;
     char			*logfile_name;
@@ -163,7 +185,6 @@ darhsan_single_exit()
     void			*pointers[CP_MAX_MEM_SEGMENTS];
     char            hostname[1024];
 
-    /* get host name for log file */
     if (gethostname(hostname, sizeof(hostname)) < 0) {
         fprintf(stderr, "error: obtaining hostname\n");
         return;
@@ -175,7 +196,6 @@ darhsan_single_exit()
         CP_UNLOCK();
         return;
     }
-
     /* closing time is set to stdin/stdout/stderr */
     darshan_history_stdio_exit();
     /* disable further tracing while hanging onto the data so that we can
@@ -184,6 +204,7 @@ darhsan_single_exit()
     final_job = darshan_global_job;
     darshan_global_job = NULL;
     CP_UNLOCK();
+//    fprintf(stderr, "YI: darshan_single_exit: 0.1\n");
 
     //
     // /* figure out which access sizes to log */
@@ -225,6 +246,7 @@ darhsan_single_exit()
         CP_F_SET(&final_job->file_runtime_array[0], CP_F_WRITE_END_TIMESTAMP, 0);
     }
     logfile_name = malloc(PATH_MAX);
+//    fprintf(stderr, "YI: darshan_single_exit: 1.1 logfile_name=%p\n", logfile_name);
     if(!logfile_name) {
         darshan_finalize(final_job);
         return;
@@ -237,6 +259,8 @@ darhsan_single_exit()
     /*
      * darshanlog-username-pid
      */
+    /* refresh pid if this is a cloned process, pid has been changed */
+    pid = getpid();
     snprintf(logfile_name, PATH_MAX, "%s%sdarshanlog-%s-%ld-%s-%u.gz", 
         getenv("DARSHAN_SINGLE_LOG_DIR") ? getenv("DARSHAN_SINGLE_LOG_DIR") : "",
         getenv("DARSHAN_SINGLE_LOG_DIR") ? "/" : "",
