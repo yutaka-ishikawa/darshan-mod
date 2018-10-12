@@ -1,0 +1,4 @@
+
+import darshan
+darshan.reset()
+
