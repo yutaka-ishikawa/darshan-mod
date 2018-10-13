@@ -1,3 +1,4 @@
+DARSHAN_SRCTOP=../../
 ifeq (`which fccpx`,)
 CC = cc
 else
@@ -24,11 +25,11 @@ runpool:
 runprocess:
 	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=1048576000; python3 ./process.py
 clean:
-	rm -f *gz run-tsc-k.sh.e*  run-tsc-k.sh.o*
+	rm -f *gz run-tsc-k.sh.{e,o,s}*  run-k.sh.{e,o,s}*
 clean2:
 	rm -f tsctest clonetest forktest
 copy:
-	cp -p ~/work/DARSHAN/darshan/darshan-2.3.0/darshan-runtime/lib/libdarshan-single.so .
+	cp -p $(DARSHAN_SRCTOP)/darshan-2.3.0/darshan-runtime/lib/libdarshan-single.so .
 examine:
 	for i in darshanlog-*gz; do\
 		darshan-parser --history $$i | grep mp_test;\

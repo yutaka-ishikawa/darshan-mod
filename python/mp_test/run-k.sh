@@ -6,6 +6,7 @@
 #PJM --mpi use-rankdir
 
 #PJM --stgin "./pool.py ./"
+#PJM --stgin "./libdarshan-single.so ./"
 #PJM --stgin-dir "./lib ./"
 
 . /work/system/Env_base
