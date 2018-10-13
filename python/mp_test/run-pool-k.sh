@@ -8,14 +8,16 @@
 #PJM --stgin "./pool.py ./"
 #PJM --stgin "./libdarshan-single.so ./"
 #PJM --stgin-dir "./lib ./"
+#PJM --stgout-dir "./POOL ./POOL"
 
 . /work/system/Env_base
 
-which perl
-which perl3
+export PYTHONPATH=./; \
+export LD_PRELOAD=./libdarshan-single.so; \
+export DARSHAN_SINGLE_LOG_DIR=./POOL; \
+export DARSHAN_HISTORY_RW="rw"; \
+export DARSHAN_HISTORY_MEMSIZE=1048576000; \
+python ./pool.py
 
-export PYTHONPATH=./lib
-
-perl --version
-./pool.py
+ls -l
 

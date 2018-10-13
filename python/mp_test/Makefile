@@ -1,7 +1,9 @@
 DARSHAN_SRCTOP=../../
-CC ?= $(shell which fccpx)
+CC := $(shell which fccpx)
 ifeq ($(strip $(CC)),)
 CC = cc
+else
+CFLAGS += -Xg
 endif
 
 tsctest: tsctest.c tsc.h
@@ -29,7 +31,8 @@ runprocess:
 runprocess-with-reset:
 	export LD_PRELOAD=./libdarshan-single.so;  export PYTHONPATH=./lib; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=1048576000; python3 ./process-with-reset.py
 clean:
-	rm -f *gz run-tsc-k.sh.{e,o,s}*  run-k.sh.{e,o,s}* ?.txt
+	rm -f *gz run-tsc-k.sh.{e,o,s}*  run-*-k.sh.{e,o,s}* ?.txt
+	rm -rf POOL POOL-WITH-RESET PROCESS PROCESS-WITH-RESET
 clean2:
 	rm -f tsctest clonetest forktest
 copy:
@@ -38,3 +41,10 @@ examine:
 	for i in darshanlog-*gz; do\
 		darshan-parser --history $$i | grep mp_test;\
 	done
+examine2:
+	for d in POOL* PROCESS*; do\
+	  cd $d;\
+	  echo $d;\
+	  for i in darshanlog-*gz; do\
+		darshan-parser --history $$i | grep mp_test;\
+	  done

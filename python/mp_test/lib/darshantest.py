@@ -1,4 +1,5 @@
 
 import darshan
-darshan.reset()
+darshan.reset('hello')
+
 
