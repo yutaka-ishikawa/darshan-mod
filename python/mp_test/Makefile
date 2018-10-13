@@ -43,8 +43,9 @@ examine:
 	done
 examine2:
 	for d in POOL* PROCESS*; do\
-	  cd $d;\
-	  echo $d;\
-	  for i in darshanlog-*gz; do\
-		darshan-parser --history $$i | grep mp_test;\
-	  done
+	  echo $$d;\
+	  for i in $$d/darshanlog-*gz; do\
+		darshan-parser --history $$i | grep txt;\
+	  done;\
+	done;
+
