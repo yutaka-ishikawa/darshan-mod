@@ -14,6 +14,17 @@ static PyMethodDef DarshanMethods[] = {
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
+#define PYTHON2
+
+#ifdef PYTHON2
+PyMODINIT_FUNC
+initdarshan(void)
+{
+    (void) Py_InitModule("darshan", DarshanMethods);
+}
+
+#endif
+#ifdef PYTHON3
 static struct PyModuleDef darshanmodule = {
     PyModuleDef_HEAD_INIT,
     "darshan",   /* name of module */
@@ -28,3 +39,4 @@ PyInit_darshan(void)
 {
     return PyModule_Create(&darshanmodule);
 }
+#endif /* PYTHON3 */
