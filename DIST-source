@@ -8,6 +8,7 @@ DIST_DIR=darshan-riken
 DIST_WORKDIR=$DIST_TMPDIR/$DIST_DIR
 mkdir -p $DIST_WORKDIR/
 mkdir -p $DIST_WORKDIR/example
+mkdir -p $DIST_WORKDIR/python
 cp -rp  $DARSHAN $DIST_WORKDIR/
 (cd $DIST_WORKDIR/darshan-2.3.0; rm -f MEMO*)
 (cd $DIST_WORKDIR/darshan-2.3.0/darshan-runtime; make clean)
@@ -21,6 +22,8 @@ cp -p example/run-k-ccode.sh $DIST_WORKDIR/example/
 cp -p example/simple.c $DIST_WORKDIR/example/
 cp -p example/ccode.c $DIST_WORKDIR/example/
 cp -p example/ccode-func.c $DIST_WORKDIR/example/
+cp -rp python $DIST_WORKDIR
+rm -f $DIST_WORKDIR/mp_test/MEMO
 #
 (cd $DIST_TMPDIR; tar czf $DIST_TAR $DIST_DIR)
 mv $DIST_TMPDIR/$DIST_TAR ./
