@@ -32,6 +32,7 @@ double		(*__real_PMPI_Wtime)(void);
 static int	single_init_f = 0;
 static char	cmdline[CP_EXE_LEN + 1];
 static char	**argv;
+static int	argc;
 static char	*cmdname;
 static pid_t	pid, ppid;
 
@@ -95,7 +96,6 @@ darshan_single_init()
 {
     int		fd, nr, i, j;
     char	*cp;
-    int		argc = 0;
     char	bufpath[1024];
     struct sigaction	newsigaction;
 
@@ -126,6 +126,7 @@ darshan_single_init()
     if (fd < 0) goto skip;
     nr = real_read(fd, cmdline, CP_EXE_LEN);
     real_close(fd);
+    argc = 0;
     for (i = 0; i < nr; i++) {
 	if (cmdline[i] == 0) argc++;
     }
@@ -165,6 +166,44 @@ void
 darshan_mnt_id_from_path(const char* path, int64_t* device_id, int64_t* block_size)
 {
     return;
+}
+
+/*
+ * This is for Python
+ */
+static char	name[CP_EXE_LEN + 1];
+void
+darshan_single_reset(char *procname)
+{
+    static int	reseted = 0;
+
+    /*
+     * reset is needed just once it is called
+     */
+    CP_LOCK();
+    if (reseted) {
+	CP_UNLOCK();
+	return;
+    }
+    reseted = 1;
+    if(!darshan_global_job)
+    {
+        CP_UNLOCK();
+        return;
+    }
+    /* simply darhsan_global_job is set to NULL */
+    darshan_global_job = NULL;
+    /* record exe and arguments */
+    if (procname) {
+	strncpy(name, procname, CP_EXE_LEN);
+    } else {
+	name[0] = 0;
+    }
+    cmdname = argv[0] = name;
+    darshan_initialize(argc, argv, 1, 0);
+    /* stdin stdout stderr entries are created at this time */
+    darshan_history_stdio_init();
+    CP_UNLOCK();
 }
 
 /*
