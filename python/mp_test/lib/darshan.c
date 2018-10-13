@@ -1,20 +1,49 @@
+//#define PYTHON2
+#define PYTHON3
+/*
+ *	Python module to reset the darhan log file
+ *	Written by Yutaka Ishikawa, yutaka.ishikawa@riken.jp
+ *	10/12/2018 Created
+ */
 #include "Python.h"
+#include <stdio.h>
+
+/*
+ * darshan_reset will be hijacked by the darshan preload module.
+ * If not, the following function is invoked to tell the user.
+ */
+extern void
+darshan_single_reset(char *procname)
+{
+    fprintf(stderr, "%s: darshan_reset is invoked without darshan runtime\n",
+	    procname);
+}
+
+static char procname[512];
 
 static PyObject *
-darshan_reset(PyObject *self, PyObject *arg)
+mydarshan_reset(PyObject *self, PyObject *args)
 {
-    printf("darshan_reset is invoked\n");
+    const char	*cp;
+
+    if (!PyArg_ParseTuple(args, "s", &cp)) {
+	fprintf(stderr, "darshan_reset: String argument is required\n");
+	Py_INCREF(Py_None);
+	return Py_None;
+    }
+    fprintf(stderr, "cp =%s\n", cp);
+    strncpy(procname, cp, 512);
+    darshan_single_reset(procname);
     Py_INCREF(Py_None);
     return Py_None;
 }
 
 static PyMethodDef DarshanMethods[] = {
-    {"reset",  darshan_reset, METH_VARARGS,
+    {"reset",  mydarshan_reset, METH_VARARGS,
      "Rest darshan"},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
-#define PYTHON2
 
 #ifdef PYTHON2
 PyMODINIT_FUNC

@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 
+import darshan
 import multiprocessing
 import os
 
 n = 4
 
 def worker(x):
+    darshan.reset('worker-%d' % x)
     print('%d: worker-%d' % (os.getpid(), x))
     #print(os.getenv('LD_PRELOAD'))
     f = open(str(x) + '.txt', 'w')

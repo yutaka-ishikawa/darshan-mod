@@ -1,3 +1,7 @@
+export PYTHONPATH=./lib
+import sys
+sys.path
+
 multiprocessing.Process
 popoen_fork.pyで定義されているPopenクラスのインスタンスはプロセス生成
 os.forkが呼ばれる。

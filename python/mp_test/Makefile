@@ -1,9 +1,7 @@
 DARSHAN_SRCTOP=../../
-ifeq (`which fccpx`,)
+CC ?= $(shell which fccpx)
+ifeq ($(strip $(CC)),)
 CC = cc
-else
-CC = fccpx
-CFLAGS += -Xg
 endif
 
 tsctest: tsctest.c tsc.h
@@ -20,12 +18,18 @@ runtest2:
 	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=1048576000; ./forktest
 run:
 	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=1048576000; ./serial.py
+###
 runpool:
-	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=1048576000; python3 ./pool.py
+	export LD_PRELOAD=./libdarshan-single.so; export PYTHONPATH=./lib; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=1048576000; python3 ./pool.py
+runpool-with-reset:
+	export LD_PRELOAD=./libdarshan-single.so; export PYTHONPATH=./lib; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=1048576000; python3 ./pool-with-reset.py
+###
 runprocess:
-	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=1048576000; python3 ./process.py
+	export LD_PRELOAD=./libdarshan-single.so;  export PYTHONPATH=./lib; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=1048576000; python3 ./process.py
+runprocess-with-reset:
+	export LD_PRELOAD=./libdarshan-single.so;  export PYTHONPATH=./lib; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=1048576000; python3 ./process-with-reset.py
 clean:
-	rm -f *gz run-tsc-k.sh.{e,o,s}*  run-k.sh.{e,o,s}*
+	rm -f *gz run-tsc-k.sh.{e,o,s}*  run-k.sh.{e,o,s}* ?.txt
 clean2:
 	rm -f tsctest clonetest forktest
 copy:
