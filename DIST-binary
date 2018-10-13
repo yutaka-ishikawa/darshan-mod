@@ -34,8 +34,8 @@ cp -p example/simple.c $DIST_WORKDIR/example/
 cp -p example/ccode.c $DIST_WORKDIR/example/
 cp -p example/ccode-func.c $DIST_WORKDIR/example/
 cp -rp python $DIST_WORKDIR
-rm -f $DIST_WORKDIR/mp_test/MEMO
-rm -f $DIST_WORKDIR/mp_test/Makefile
-mv  $DIST_WORKDIR/mp_test/Makefile.dist $DIST_WORKDIR/mp_test/Makefile
+rm -f $DIST_WORKDIR/python/mp_test/MEMO
+rm -f $DIST_WORKDIR/python/mp_test/Makefile
+mv  $DIST_WORKDIR/python/mp_test/Makefile.dist $DIST_WORKDIR/python/mp_test/Makefile
 (cd $DIST_TMPDIR; tar czf $DIST_TAR $DIST_DIR; mv $DIST_TAR ../)
 /bin/rm -rf $DIST_TMPDIR
