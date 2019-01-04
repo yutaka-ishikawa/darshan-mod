@@ -3160,8 +3160,9 @@ int DARSHAN_DECL(getc_unlocked)(FILE *stream)
     tm2 = darshan_wtime();
     fd = fileno(stream);
     CP_LOCK();
+    /* 1 byte read */
     CP_RECORD_READ(1, fd, 0, 0, 0, 0, 1, tm1, tm2);
-    darshan_history_read(fd, ret, tm1, tm2);
+    darshan_history_read(fd, 1, tm1, tm2);
     CP_UNLOCK();
     return ret;
 }
@@ -3178,8 +3179,9 @@ int DARSHAN_DECL(getchar_unlocked)(void)
     tm2 = darshan_wtime();
     fd = fileno(stdin);
     CP_LOCK();
+    /* 1 byte read */
     CP_RECORD_READ(1, fd, 0, 0, 0, 0, 1, tm1, tm2);
-    darshan_history_read(fd, ret, tm1, tm2);
+    darshan_history_read(fd, 1, tm1, tm2);
     CP_UNLOCK();
     return ret;
 }
@@ -3197,8 +3199,9 @@ int DARSHAN_DECL(putc_unlocked)(int c, FILE *stream)
     tm2 = darshan_wtime();
     fd = fileno(stream);
     CP_LOCK();
-    CP_RECORD_WRITE(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
-    darshan_history_write(fd, ret, tm1, tm2);
+    /* 1 byte write */
+    CP_RECORD_WRITE(1, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_write(fd, 1, tm1, tm2);
     CP_UNLOCK();
     return ret;
 }
@@ -3216,8 +3219,9 @@ int DARSHAN_DECL(putchar_unlocked)(int c)
     tm2 = darshan_wtime();
     fd = fileno(stdout);
     CP_LOCK();
-    CP_RECORD_WRITE(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
-    darshan_history_write(fd, ret, tm1, tm2);
+    /* 1 byte write */
+    CP_RECORD_WRITE(1, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_write(fd, 1, tm1, tm2);
     CP_UNLOCK();
     return ret;
 }
@@ -3234,8 +3238,9 @@ int DARSHAN_DECL(fgetc_unlocked)(FILE *stream)
     tm2 = darshan_wtime();
     fd = fileno(stream);
     CP_LOCK();
+    /* 1 byte read */
     CP_RECORD_READ(1, fd, 0, 0, 0, 0, 1, tm1, tm2);
-    darshan_history_read(fd, ret, tm1, tm2);
+    darshan_history_read(fd, 1, tm1, tm2);
     CP_UNLOCK();
     return ret;
 }
@@ -3253,8 +3258,9 @@ int DARSHAN_DECL(fputc_unlocked)(int c, FILE *stream)
     tm2 = darshan_wtime();
     fd = fileno(stream);
     CP_LOCK();
+    /* 1 byte write */
     CP_RECORD_WRITE(1, fd, 0, 0, 0, 0, 1, tm1, tm2);
-    darshan_history_write(fd, ret, tm1, tm2);
+    darshan_history_write(fd, 1, tm1, tm2);
     CP_UNLOCK();
     return ret;
 }
