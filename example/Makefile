@@ -3,13 +3,17 @@
 # The program opens "./null" file which should be symbolically linked
 # to /dev/null.
 #
-#MPICC   =       mpifccpx
-#CFLAGS  = -DFJ_MPI -O3 -Xg
-MPICC = mpicc
-CC = cc
+ifeq (fe01, $(findstring fe01, $(HOSTNAME)))
+	MPICC   =       mpifccpx
+	CFLAGS  = -DFJ_MPI -O3 -Xg
+	CC = fccpx
+else
+	MPICC = mpicc
+	CC = cc
+	CFLAGS  = -O -Wall
+endif
 #CFLAGS  = -O3 -Wall  ## backtrace does not work properly
 #CFLAGS  = -O2 -Wall  ## backtrace does not work properly
-CFLAGS  = -O -Wall
 
 all: simple simple-mpi simple2 simple3 ccode write_test write_test2 stream stream3 large_hist
 simple: simple.c

@@ -5,6 +5,7 @@
 #PJM --rsc-list elapse=0:10:00  # HH:MM:SS
 #PJM --mpi use-rankdir
 #
+#PJM --stgin "./simple-mpi ./"
 #PJM --stgin "./simple ./"
 #PJM --stgin "../k-lib/libdarshan.so ./"
 #PJM --stgout-dir "../darshan/ ./results/%n.d%j/job/darshan/ stgout=all,recursive=99"
