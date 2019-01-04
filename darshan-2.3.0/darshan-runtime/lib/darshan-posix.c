@@ -120,15 +120,17 @@ DARSHAN_FORWARD_DECL(__fprintf_chk, int, (FILE *stream, int flag, const char *fm
 DARSHAN_FORWARD_DECL(__printf_chk, int, (int flag, const char *fmt, ...));
 DARSHAN_FORWARD_DECL(fputc, int, (int c, FILE *stream));
 DARSHAN_FORWARD_DECL(fputs, int, (const char *s, FILE *stream));
-/* DARSHAN_FORWARD_DECL(putc, int, (int c, FILE *stream)); */
-DARSHAN_FORWARD_DECL(IO_putc, int, (int c, FILE *stream));
+/* putc is a macro using IO_putc
+   DARSHAN_FORWARD_DECL(putc, int, (int c, FILE *stream)); */
+DARSHAN_FORWARD_DECL(_IO_putc, int, (int c, FILE *stream));
 DARSHAN_FORWARD_DECL(putchar, int, (int c));
 DARSHAN_FORWARD_DECL(puts, int, (const char *s));
 /**/
 DARSHAN_FORWARD_DECL(fgetc, int, (FILE *stream));
 DARSHAN_FORWARD_DECL(fgets, char*, (char *s, int size, FILE *stream));
-/* DARSHAN_FORWARD_DECL(getc, int, (FILE *stream)); */
-DARSHAN_FORWARD_DECL(IO_getc, int, (FILE *stream));
+/* getc is a macro using IO_getc
+   DARSHAN_FORWARD_DECL(getc, int, (FILE *stream)); */
+DARSHAN_FORWARD_DECL(_IO_getc, int, (FILE *stream));
 DARSHAN_FORWARD_DECL(getchar, int, (void));
 DARSHAN_FORWARD_DECL(ungetc, int, (int c, FILE *stream));
 /* gets is actually deprecated */
@@ -141,12 +143,57 @@ DARSHAN_FORWARD_DECL(clone, int,
 		     (int (*fn)(void *), void *child_stack,
 		      int flags, void *arg, ...));
 
+/*****************
+ * unlocked stdio
+ *****************/
+#if defined __USE_MISC && defined __GNUC__ && defined __OPTIMIZE__ \
+    && !defined __cplusplus
+#undef fread_unlocked
+#undef fwrite_unlocked
+#endif 
+DARSHAN_FORWARD_DECL(fread_unlocked, size_t, (void *ptr, size_t size, size_t nmemb, FILE *stream));
+DARSHAN_FORWARD_DECL(fwrite_unlocked, size_t, (const void *ptr, size_t size, size_t nmemb, FILE *stream));
+DARSHAN_FORWARD_DECL(fputs_unlocked, int, (const char *s, FILE *stream));
+DARSHAN_FORWARD_DECL(fgets_unlocked, char*, (char *s, int size, FILE *stream));
+
+/*
+ * getc_unlocked, getchar_unlocked, putc_unlocked, putchar_unlocked,
+ * fputc_unlocked, and fgetc _unlocked
+ * are only called if the source code is compiled without optimization.
+ * In case of source code compiled with -O or higher optimization flag,
+ * those functions are expanded.
+ * See /usr/include/x86_64-linux-gnu/bits/stdio.h 
+ *	__USE_EXTERN_INLINES constant is defined in case with optimization.
+ */
+DARSHAN_FORWARD_DECL(getc_unlocked, int, (FILE *stream));
+DARSHAN_FORWARD_DECL(getchar_unlocked, int, (void));
+DARSHAN_FORWARD_DECL(putc_unlocked, int, (int c, FILE *stream));
+DARSHAN_FORWARD_DECL(putchar_unlocked, int, (int c));
+DARSHAN_FORWARD_DECL(fgetc_unlocked, int, (FILE *stream));
+DARSHAN_FORWARD_DECL(fputc_unlocked, int, (int c, FILE *stream));
+
+/*
+ * The following functions are macro defined in x86_64-linux-gnu/bits/libio.h
+  DARSHAN_FORWARD_DECL(_IO_getc_unlocked, int, (FILE *stream));
+  DARSHAN_FORWARD_DECL(_IO_peekc_unlocked, int, (FILE *stream));
+  DARSHAN_FORWARD_DECL(_IO_putc_unlocked, int, (char, FILE *stream));
+*/
+
 /*
   stream IO for wide character is not supported at this time. 2018/09/27. 
   DARSHAN_FORWARD_DECL(fgetwc, wint_t, (FILE *stream));
   DARSHAN_FORWARD_DECL(getwc, wint_t, (FILE *stream));
   DARSHAN_FORWARD_DECL(ungetwc, wint_t, (wint_t wc, FILE *stream));
   DARSHAN_FORWARD_DECL(fgetws, wchar_t*, (wchar_t *ws, int n, FILE *stream));
+  DARSHAN_FORWARD_DECL(getwc_unlocked, wint_t, (FILE *stream));
+  DARSHAN_FORWARD_DECL(getwchar_unlocked, wint_t, (void));
+  DARSHAN_FORWARD_DECL(fgetwc_unlocked, wint_t, (FILE *stream));
+  DARSHAN_FORWARD_DECL(fputwc_unlocked, wint_t, (wchar_t wc, FILE *stream));
+  DARSHAN_FORWARD_DECL(putwc_unlocked, wint_t, (wchar_t wc, FILE *stream));
+  DARSHAN_FORWARD_DECL(putwchar_unlocked, wint_t, (wchar_t wc));
+  DARSHAN_FORWARD_DECL(fgetws_unlocked, wchar_t*,
+			(wchar_t *ws, int n, FILE *stream));
+  DARSHAN_FORWARD_DECL(fputws_unlocked, int (const wchar_t *ws, FILE *stream));
 */
 
 
@@ -2380,6 +2427,7 @@ static struct darshan_aio_tracker* darshan_aio_tracker_del(int fd, void *aiocbp)
     struct darshan_file_runtime* file;
 
     CP_LOCK();
+    tmp = NULL;
     file = darshan_file_by_fd(fd);
     if(file)
     {
@@ -2691,8 +2739,9 @@ int DARSHAN_DECL(fputc)(int c, FILE *stream)
     tm2 = darshan_wtime();
     fd = fileno(stream);
     CP_LOCK();
-    CP_RECORD_WRITE(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
-    darshan_history_write(fd, ret, tm1, tm2);
+    /* 1 byte write */
+    CP_RECORD_WRITE(1, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_write(fd, 1, tm1, tm2);
     CP_UNLOCK();
     return ret;
 }
@@ -2710,27 +2759,30 @@ int DARSHAN_DECL(fputs)(const char *s, FILE *stream)
     tm2 = darshan_wtime();
     fd = fileno(stream);
     CP_LOCK();
+    /* manual does not say the return value is the number of written chars */
+    if (ret > 0) ret = strlen(s);
     CP_RECORD_WRITE(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
     darshan_history_write(fd, ret, tm1, tm2);
     CP_UNLOCK();
     return ret;
 }
 
-int DARSHAN_DECL(IO_putc)(int c, FILE *stream)
+int DARSHAN_DECL(_IO_putc)(int c, FILE *stream)
 {
     int		ret, fd;
     double	tm1, tm2;
 
     CHECK_DARSHAN_INIT();
-    MAP_OR_FAIL(IO_putc);
+    MAP_OR_FAIL(_IO_putc);
 
     tm1 = darshan_wtime();
-    ret = __real_IO_putc(c, stream);
+    ret = __real__IO_putc(c, stream);
     tm2 = darshan_wtime();
     fd = fileno(stream);
     CP_LOCK();
-    CP_RECORD_WRITE(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
-    darshan_history_write(fd, ret, tm1, tm2);
+    /* 1 byte write */
+    CP_RECORD_WRITE(1, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_write(fd, 1, tm1, tm2);
     CP_UNLOCK();
     return ret;
 }
@@ -2748,8 +2800,9 @@ int DARSHAN_DECL(putchar)(int c)
     tm2 = darshan_wtime();
     fd = fileno(stdout);
     CP_LOCK();
-    CP_RECORD_WRITE(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
-    darshan_history_write(fd, ret, tm1, tm2);
+    /* 1 byte write */
+    CP_RECORD_WRITE(1, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_write(fd, 1, tm1, tm2);
     CP_UNLOCK();
     return ret;
 }
@@ -2767,6 +2820,8 @@ int DARSHAN_DECL(puts)(const char *s)
     ret = __real_puts(s);
     tm2 = darshan_wtime();
     fd = fileno(stdout);
+    /* manual does not say the return value is the number of written chars */
+    if (ret > 0) ret = strlen(s) + 1; // puts also writes neline
     CP_LOCK();
     CP_RECORD_WRITE(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
     darshan_history_write(fd, ret, tm1, tm2);
@@ -2786,8 +2841,9 @@ int DARSHAN_DECL(fgetc)(FILE *stream)
     tm2 = darshan_wtime();
     fd = fileno(stream);
     CP_LOCK();
-    CP_RECORD_READ(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
-    darshan_history_read(fd, ret, tm1, tm2);
+    /* 1 byte read */
+    CP_RECORD_READ(1, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_read(fd, 1, tm1, tm2);
     CP_UNLOCK();
     return ret;
 }
@@ -2812,20 +2868,21 @@ char* DARSHAN_DECL(fgets)(char *s, int size, FILE *stream)
     return rs;
 }
 
-int DARSHAN_DECL(IO_getc)(FILE *stream)
+int DARSHAN_DECL(_IO_getc)(FILE *stream)
 {
     int ret, fd;
     double tm1, tm2;
 
-    MAP_OR_FAIL(IO_getc);
+    MAP_OR_FAIL(_IO_getc);
 
     tm1 = darshan_wtime();
-    ret = __real_IO_getc(stream);
+    ret = __real__IO_getc(stream);
     tm2 = darshan_wtime();
     fd = fileno(stream);
     CP_LOCK();
-    CP_RECORD_READ(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
-    darshan_history_read(fd, ret, tm1, tm2);
+    /* 1 byte read */
+    CP_RECORD_READ(1, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_read(fd, 1, tm1, tm2);
     CP_UNLOCK();
     return ret;
 }
@@ -2842,8 +2899,9 @@ int DARSHAN_DECL(getchar)(void)
     tm2 = darshan_wtime();
     fd = fileno(stdin);
     CP_LOCK();
-    CP_RECORD_READ(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
-    darshan_history_read(fd, ret, tm1, tm2);
+    /* 1 byte read */
+    CP_RECORD_READ(1, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_read(fd, 1, tm1, tm2);
     CP_UNLOCK();
     return ret;
 }
@@ -2860,10 +2918,9 @@ int DARSHAN_DECL(ungetc)(int c, FILE *stream)
     tm2 = darshan_wtime();
     fd = fileno(stream);
     CP_LOCK();
-    CP_RECORD_READ(0, fd, 0, 0, 0, 0, 1, tm1, tm2);
     /* one byte push back */
-    if (ret == c) ret = -1; else ret = 0;
-    darshan_history_read(fd, ret, tm1, tm2);
+    CP_RECORD_READ(0, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_read(fd, 0, tm1, tm2);
     CP_UNLOCK();
     return ret;
 }
@@ -2997,6 +3054,209 @@ int DARSHAN_DECL(clone)(int (*fn)(void *), void *child_stack,
     return ret;
 }
 
+size_t DARSHAN_DECL(fread_unlocked)(void *ptr, size_t size, size_t nmemb, FILE *stream)
+{
+    size_t ret;
+    int aligned_flag = 0;
+    double tm1, tm2;
+
+    MAP_OR_FAIL(fread_unlocked);
+
+    if((unsigned long)ptr % darshan_mem_alignment == 0)
+        aligned_flag = 1;
+
+    tm1 = darshan_wtime();
+    ret = __real_fread_unlocked(ptr, size, nmemb, stream);
+    tm2 = darshan_wtime();
+    CP_LOCK();
+    if(ret > 0)
+        CP_RECORD_READ(size*ret, fileno(stream), (size*nmemb), 0, 0, aligned_flag, 1, tm1, tm2);
+    else
+        CP_RECORD_READ(ret, fileno(stream), (size*nmemb), 0, 0, aligned_flag, 1, tm1, tm2);
+#ifdef HISTORY
+    darshan_history_read(fileno(stream), size*nmemb, tm1, tm2);
+#endif /*HISTORY*/
+    CP_UNLOCK();
+    return(ret);
+}
+
+size_t DARSHAN_DECL(fwrite_unlocked)(const void *ptr, size_t size, size_t nmemb, FILE *stream)
+{
+    size_t ret;
+    int aligned_flag = 0;
+    double tm1, tm2;
+
+    MAP_OR_FAIL(fwrite_unlocked);
+
+    if((unsigned long)ptr % darshan_mem_alignment == 0)
+        aligned_flag = 1;
+
+    tm1 = darshan_wtime();
+    ret = __real_fwrite_unlocked(ptr, size, nmemb, stream);
+    tm2 = darshan_wtime();
+    CP_LOCK();
+    if(ret > 0)
+        CP_RECORD_WRITE(size*ret, fileno(stream), (size*nmemb), 0, 0, aligned_flag, 1, tm1, tm2);
+    else
+        CP_RECORD_WRITE(ret, fileno(stream), 0, 0, 0, aligned_flag, 1, tm1, tm2);
+#ifdef HISTORY
+    darshan_history_write(fileno(stream), size*nmemb, tm1, tm2);
+#endif /*HISTORY*/
+    CP_UNLOCK();
+    return(ret);
+}
+
+int DARSHAN_DECL(fputs_unlocked)(const char *s, FILE *stream)
+{
+    int		ret, fd;
+    double	tm1, tm2;
+
+    CHECK_DARSHAN_INIT();
+    MAP_OR_FAIL(fputs_unlocked);
+
+    tm1 = darshan_wtime();
+    ret = __real_fputs_unlocked(s, stream);
+    tm2 = darshan_wtime();
+    fd = fileno(stream);
+    CP_LOCK();
+    /* manual does not say the return value is the number of written chars */
+    if (ret > 0) ret = strlen(s);
+    CP_RECORD_WRITE(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_write(fd, ret, tm1, tm2);
+    CP_UNLOCK();
+    return ret;
+}
+
+char* DARSHAN_DECL(fgets_unlocked)(char *s, int size, FILE *stream)
+{
+    char *rs;
+    int ret, fd;
+    double tm1, tm2;
+
+    MAP_OR_FAIL(fgets_unlocked);
+
+    tm1 = darshan_wtime();
+    rs = __real_fgets_unlocked(s, size, stream);
+    tm2 = darshan_wtime();
+    fd = fileno(stream);
+    if (rs == s) ret = strlen(s); else ret = 0;
+    CP_LOCK();
+    CP_RECORD_READ(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_read(fd, ret, tm1, tm2);
+    CP_UNLOCK();
+    return rs;
+}
+
+int DARSHAN_DECL(getc_unlocked)(FILE *stream)
+{
+    int ret, fd;
+    double tm1, tm2;
+
+    MAP_OR_FAIL(getc_unlocked);
+
+    tm1 = darshan_wtime();
+    ret = __real_getc_unlocked(stream);
+    tm2 = darshan_wtime();
+    fd = fileno(stream);
+    CP_LOCK();
+    CP_RECORD_READ(1, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_read(fd, ret, tm1, tm2);
+    CP_UNLOCK();
+    return ret;
+}
+
+int DARSHAN_DECL(getchar_unlocked)(void)
+{
+    int ret, fd;
+    double tm1, tm2;
+
+    MAP_OR_FAIL(getchar_unlocked);
+
+    tm1 = darshan_wtime();
+    ret = __real_getchar_unlocked();
+    tm2 = darshan_wtime();
+    fd = fileno(stdin);
+    CP_LOCK();
+    CP_RECORD_READ(1, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_read(fd, ret, tm1, tm2);
+    CP_UNLOCK();
+    return ret;
+}
+
+int DARSHAN_DECL(putc_unlocked)(int c, FILE *stream)
+{
+    int		ret, fd;
+    double	tm1, tm2;
+
+    CHECK_DARSHAN_INIT();
+    MAP_OR_FAIL(putc_unlocked);
+
+    tm1 = darshan_wtime();
+    ret = __real_putc_unlocked(c, stream);
+    tm2 = darshan_wtime();
+    fd = fileno(stream);
+    CP_LOCK();
+    CP_RECORD_WRITE(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_write(fd, ret, tm1, tm2);
+    CP_UNLOCK();
+    return ret;
+}
+
+int DARSHAN_DECL(putchar_unlocked)(int c)
+{
+    int		ret, fd;
+    double	tm1, tm2;
+
+    CHECK_DARSHAN_INIT();
+    MAP_OR_FAIL(putchar_unlocked);
+
+    tm1 = darshan_wtime();
+    ret = __real_putchar_unlocked(c);
+    tm2 = darshan_wtime();
+    fd = fileno(stdout);
+    CP_LOCK();
+    CP_RECORD_WRITE(ret, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_write(fd, ret, tm1, tm2);
+    CP_UNLOCK();
+    return ret;
+}
+
+int DARSHAN_DECL(fgetc_unlocked)(FILE *stream)
+{
+    int ret, fd;
+    double tm1, tm2;
+
+    MAP_OR_FAIL(fgetc_unlocked);
+
+    tm1 = darshan_wtime();
+    ret = __real_fgetc_unlocked(stream);
+    tm2 = darshan_wtime();
+    fd = fileno(stream);
+    CP_LOCK();
+    CP_RECORD_READ(1, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_read(fd, ret, tm1, tm2);
+    CP_UNLOCK();
+    return ret;
+}
+
+int DARSHAN_DECL(fputc_unlocked)(int c, FILE *stream)
+{
+    int		ret, fd;
+    double	tm1, tm2;
+
+    CHECK_DARSHAN_INIT();
+    MAP_OR_FAIL(fputc_unlocked);
+
+    tm1 = darshan_wtime();
+    ret = __real_fputc_unlocked(c, stream);
+    tm2 = darshan_wtime();
+    fd = fileno(stream);
+    CP_LOCK();
+    CP_RECORD_WRITE(1, fd, 0, 0, 0, 0, 1, tm1, tm2);
+    darshan_history_write(fd, ret, tm1, tm2);
+    CP_UNLOCK();
+    return ret;
+}
 
 void
 darshan_history_stdio_init()

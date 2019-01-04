@@ -11,7 +11,7 @@ CC = cc
 #CFLAGS  = -O2 -Wall  ## backtrace does not work properly
 CFLAGS  = -O -Wall
 
-all: simple simple-mpi simple2 simple3 ccode write_test write_test2 stream large_hist
+all: simple simple-mpi simple2 simple3 ccode write_test write_test2 stream stream3 large_hist
 simple: simple.c
 	$(MPICC) $(CFLAGS) -o simple simple.c
 simple-mpi: simple.c
@@ -31,6 +31,8 @@ write_test2: write_test2.c
 	$(CC) $(CFLAGS) -g -o write_test2 write_test2.c  -rdynamic
 stream: stream.c
 	$(CC) $(CFLAGS) -o stream stream.c
+stream3: stream3.c
+	$(CC) $(CFLAGS) -o stream3 stream3.c
 large_hist: large_hist.c
 	$(CC) $(CFLAGS) -o large_hist large_hist.c -rdynamic
 libcopy:
@@ -84,6 +86,8 @@ mywc:
 	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; wc ccode.c
 mystream:
 	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; ./stream
+mystream3:
+	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; ./stream3
 mytest:
 	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; ./a.out
 mycc:
