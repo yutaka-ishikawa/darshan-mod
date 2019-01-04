@@ -3,7 +3,7 @@ MPICC   = mpifccpx
 CFLAGS  = -DFJ_MPI -O3 -Xg
 CFLAGS2 = -Xg
 
-all: simple-mpi simple-single ccode
+all: simple-mpi simple-single ccode stream
 
 simple-mpi: simple.c
 	$(MPICC) $(CFLAGS) -DMPI -o simple-mpi simple.c
@@ -11,7 +11,9 @@ simple-single: simple.c
 	$(MPICC) $(CFLAGS) -o simple-single simple.c
 ccode: ccode.c ccode-func.c
 	$(CC) $(CFLAGS2) -O -g -o ccode ccode.c ccode-func.c -rdynamic
-clean: simple-mpi simple-single ccode
+stream: stream.c
+	$(CC) $(CFLAGS2) -O -g -o stream stream.c
+clean: simple-mpi simple-single ccode stream
 	rm -f $^
 
 #

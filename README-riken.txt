@@ -1,9 +1,9 @@
 Extended Darshan (Based on 2.3.0 release)
-					      October 12, 2018
+					      January 04, 2019
 					      System Software Research Team
 					      System Software Development Team
 					       			   RIKEN R-CCS
-					      Fujitsu Ltd.
+					      			   Fujitsu Ltd.
 Darshan is developed at Argonne National Laboratory.  We extend it to
 recording file I/O operation history.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -157,6 +157,16 @@ Note:
 
 -------------------------------------------------------------------------------
 HISTORY:
+01/04/2019
+- Fixing bugs for fputc, putc, etc.
+- Some unlocked stream IO operations are now captured. Be sure that
+  the following operations cannot be captured when the source code is
+  compiled with -O or higher optimization levels.
+  getc_unlocked, getchar_unlocked, putc_unlocked, putchar_unlocked,
+  fputc_unlocked, fgetc _unlocked, and fread_unlocked
+  Those functions are defined as macros for optimization.
+  fwrite_unlocked might also cannot be captured.
+
 10/09/2018
 - The following stream functions are now captured.
   - fputc, fputs, putc, IO_putc, putchar, puts, fgetc, fgets, IO_getc,

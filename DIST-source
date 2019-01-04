@@ -22,6 +22,7 @@ cp -p example/run-k-ccode.sh $DIST_WORKDIR/example/
 cp -p example/simple.c $DIST_WORKDIR/example/
 cp -p example/ccode.c $DIST_WORKDIR/example/
 cp -p example/ccode-func.c $DIST_WORKDIR/example/
+cp -p example/stream3.c $DIST_WORKDIR/example/stream.c
 cp -rp python $DIST_WORKDIR
 rm -f $DIST_WORKDIR/python/mp_test/MEMO
 rm -f $DIST_WORKDIR/python/mp_test/Makefile.dist

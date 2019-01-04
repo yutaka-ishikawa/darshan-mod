@@ -158,10 +158,11 @@ DARSHAN_FORWARD_DECL(fgets_unlocked, char*, (char *s, int size, FILE *stream));
 
 /*
  * getc_unlocked, getchar_unlocked, putc_unlocked, putchar_unlocked,
- * fputc_unlocked, and fgetc _unlocked
+ * fputc_unlocked, fgetc _unlocked, and fread_unlock
  * are only called if the source code is compiled without optimization.
  * In case of source code compiled with -O or higher optimization flag,
- * those functions are expanded.
+ * those functions are expanded to inline statements.
+ * fwrite_unlocked might also cannot be captured.
  * See /usr/include/x86_64-linux-gnu/bits/stdio.h 
  *	__USE_EXTERN_INLINES constant is defined in case with optimization.
  */

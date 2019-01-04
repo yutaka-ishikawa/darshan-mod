@@ -14,10 +14,14 @@ clonetest: clonetest.c
 forktest: forktest.c
 	cc -g -O2 -c forktest.c
 	cc -g -o forktest forktest.o
+nulltest: nulltest.c
+	cc -g -O2 -o nulltest nulltest.c
 runtest:
 	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=1048576000; ./clonetest
 runtest2:
 	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=1048576000; ./forktest
+runnulltest:
+	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=1048576000; ./nulltest
 run:
 	export LD_PRELOAD=./libdarshan-single.so; export DARSHAN_HISTORY_RW="rw"; export DARSHAN_HISTORY_MEMSIZE=1048576000; ./serial.py
 ###
