@@ -6,7 +6,7 @@
 #PJM --mpi use-rankdir
 #
 #PJM --stgin "./stream3 ./"
-#PJM --stgin "../k-lib/libdarshan-single.so ./"
+#PJM --stgin "./libdarshan-single.so ./"
 #PJM --stgout "./darshanlog-* ./results/"  
 #
 
